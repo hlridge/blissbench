@@ -1,0 +1,4 @@
+node_modules/
+results/
+*.scored.jsonl
+*.scored.summary.json

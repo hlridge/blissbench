@@ -1,0 +1,35 @@
+blissbench
+==========
+
+An experimental benchmark kit for interpreting Blissymbolics words with AI.
+Not intended to be maintained long-term.
+
+Code
+----
+Copyright (c) 2024-present Hannes Ljusås.
+Licensed under the Mozilla Public License, Version 2.0 (see LICENSE).
+You may consume this kit as a dependency in any project; the MPL only requires
+that modifications to MPL-covered files remain available under the MPL.
+
+Referenced source
+-----------------
+The modifier set (membership, tiers, conditional exceptions) in
+`src/modifiers/bliss-modifiers.js` originates from the BCI-AV head-glyph exclusions
+defined by the bliss-svg-builder project
+(https://github.com/hlridge/bliss-svg-builder, MPL-2.0). That source file is
+referenced, not vendored; the curated glosses and explanations are this kit's own.
+
+Bundled data
+------------
+`data/blissary-bliss-dictionary-export-2026-05-23.json` and every artifact derived
+from it (`data/targets.jsonl`, `data/answers.jsonl`, `data/sets/*`, `data/modifiers.json`)
+contain Blissymbolics dictionary content licensed under
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0):
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Attribution:
+- Blissary, author: Hannes Ljusås, source: https://blissary.com
+- BCI-AV, author: Blissymbolics Communication International,
+  source: https://blissymbolics.org/index.php/symbol-files
+
+If you redistribute or adapt the data, keep this attribution and the ShareAlike terms.

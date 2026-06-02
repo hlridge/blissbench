@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "blissbench/submission@1",
+  "title": "blissbench submission row",
+  "description": "One JSONL row per eligible target. A submission file is one such row per line.",
+  "type": "object",
+  "required": ["targetId", "candidates"],
+  "additionalProperties": true,
+  "properties": {
+    "targetId": {
+      "type": "string",
+      "pattern": "^B[0-9]+$",
+      "description": "The eligible target's B-id, exactly as in data/targets.jsonl (e.g. \"B1167\")."
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": { "type": "string" },
+      "description": "Your model's English guesses, best-first. Only the first 5 are scored; each is ONE guess (do not comma-pack alternatives into a single candidate)."
+    },
+    "runner": {
+      "type": "string",
+      "description": "Free label for who/what produced this row (e.g. \"gpt5-run\", \"codex\"). Not scored."
+    },
+    "promptVersion": {
+      "type": "string",
+      "description": "Free label for your prompt/method version. Not scored."
+    },
+    "rawResponseText": {
+      "type": "string",
+      "description": "Optional raw model output. Used as a fallback to extract candidates if `candidates` is absent."
+    }
+  }
+}

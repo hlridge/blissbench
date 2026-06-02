@@ -1,0 +1,1117 @@
+{
+  "$schema": "blissbench/modifiers@3",
+  "$source": "src/modifiers/bliss-modifiers.js: kit-owned modifier set. Membership/tiers/conditionals originate from the BCI-AV head-glyph exclusions in bliss-svg-builder (https://github.com/hlridge/bliss-svg-builder, MPL-2.0), referenced not vendored. `gloss` is the symbol's own dictionary gloss from the snapshot (data-driven); `asPrefix` is how it reads when prefixing what follows (curated in the source).",
+  "$regenerate": "node bin/build-modifiers.js",
+  "tiers": {
+    "absolute-never-head": [
+      "B233"
+    ],
+    "low-priority": [
+      "B401",
+      "B699"
+    ]
+  },
+  "conditionalExceptions": [
+    [
+      "B10",
+      "B4"
+    ]
+  ],
+  "categories": [
+    "Structural markers",
+    "Pragmatic lexical markers",
+    "Scalar degree operators",
+    "Identity-affecting operators",
+    "Concept-transforming operators",
+    "Relational operators",
+    "Determiners",
+    "Quantifiers"
+  ],
+  "knownGaps": [
+    "few (not yet in the head-glyph-exclusion source)"
+  ],
+  "count": 85,
+  "entries": [
+    {
+      "spelling": "B233",
+      "codes": [
+        "B233"
+      ],
+      "category": "Structural markers",
+      "tier": "absolute-never-head",
+      "gloss": "combine marker",
+      "asPrefix": [
+        "combine marker"
+      ]
+    },
+    {
+      "spelling": "B401",
+      "codes": [
+        "B401"
+      ],
+      "category": "Pragmatic lexical markers",
+      "tier": "low-priority",
+      "gloss": "intensity",
+      "asPrefix": [
+        "exclamation"
+      ]
+    },
+    {
+      "spelling": "B699",
+      "codes": [
+        "B699"
+      ],
+      "category": "Pragmatic lexical markers",
+      "tier": "low-priority",
+      "gloss": "what, question mark (small)",
+      "asPrefix": [
+        "question"
+      ]
+    },
+    {
+      "spelling": "B937",
+      "codes": [
+        "B937"
+      ],
+      "category": "Scalar degree operators",
+      "tier": "regular",
+      "gloss": "comparative more",
+      "asPrefix": [
+        "more"
+      ]
+    },
+    {
+      "spelling": "B968",
+      "codes": [
+        "B968"
+      ],
+      "category": "Scalar degree operators",
+      "tier": "regular",
+      "gloss": "maximum",
+      "asPrefix": [
+        "most"
+      ]
+    },
+    {
+      "spelling": "B6438",
+      "codes": [
+        "B6438"
+      ],
+      "category": "Scalar degree operators",
+      "tier": "regular",
+      "gloss": "comparative less",
+      "asPrefix": [
+        "less"
+      ]
+    },
+    {
+      "spelling": "B6321",
+      "codes": [
+        "B6321"
+      ],
+      "category": "Scalar degree operators",
+      "tier": "regular",
+      "gloss": "minimum",
+      "asPrefix": [
+        "least"
+      ]
+    },
+    {
+      "spelling": "B449/B401",
+      "codes": [
+        "B449",
+        "B401"
+      ],
+      "category": "Identity-affecting operators",
+      "tier": "regular",
+      "gloss": "not, negative, no, don't, doesn't",
+      "asPrefix": [
+        "not"
+      ]
+    },
+    {
+      "spelling": "B486",
+      "codes": [
+        "B486"
+      ],
+      "category": "Identity-affecting operators",
+      "tier": "regular",
+      "gloss": "opposite meaning, opposite",
+      "asPrefix": [
+        "opposite of"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B608/B292",
+      "codes": [
+        "B1060",
+        "B578",
+        "B608",
+        "B292"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "rhyme",
+      "asPrefix": [
+        "rhymes with"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B303",
+      "codes": [
+        "B1060",
+        "B578",
+        "B303"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar looking, looks similar",
+      "asPrefix": [
+        "looks similar to",
+        "looks almost the same as"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B608",
+      "codes": [
+        "B1060",
+        "B578",
+        "B608"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar sound, sounds like",
+      "asPrefix": [
+        "sounds similar to",
+        "sounds almost the same as"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B374",
+      "codes": [
+        "B1060",
+        "B578",
+        "B374"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar feeling",
+      "asPrefix": [
+        "feels similar to",
+        "feels almost the same as"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B473",
+      "codes": [
+        "B1060",
+        "B578",
+        "B473"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar smell",
+      "asPrefix": [
+        "smells similar to",
+        "smells almost the same as"
+      ]
+    },
+    {
+      "spelling": "B1060/B578/B642",
+      "codes": [
+        "B1060",
+        "B578",
+        "B642"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar taste",
+      "asPrefix": [
+        "tastes similar to",
+        "tastes almost the same as"
+      ]
+    },
+    {
+      "spelling": "B1060/B578",
+      "codes": [
+        "B1060",
+        "B578"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "similar, like, alike",
+      "asPrefix": [
+        "similar to",
+        "almost the same as"
+      ]
+    },
+    {
+      "spelling": "B578/B303",
+      "codes": [
+        "B578",
+        "B303"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "same appearance",
+      "asPrefix": [
+        "looks like",
+        "looks the same as"
+      ]
+    },
+    {
+      "spelling": "B578/B608",
+      "codes": [
+        "B578",
+        "B608"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "same sound",
+      "asPrefix": [
+        "sounds like",
+        "sounds the same as"
+      ]
+    },
+    {
+      "spelling": "B578/B374",
+      "codes": [
+        "B578",
+        "B374"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "same feeling",
+      "asPrefix": [
+        "feels like",
+        "feels the same as"
+      ]
+    },
+    {
+      "spelling": "B578/B473",
+      "codes": [
+        "B578",
+        "B473"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "same smell",
+      "asPrefix": [
+        "smells like",
+        "smells the same as"
+      ]
+    },
+    {
+      "spelling": "B578/B642",
+      "codes": [
+        "B578",
+        "B642"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "same taste",
+      "asPrefix": [
+        "tastes like",
+        "tastes the same as"
+      ]
+    },
+    {
+      "spelling": "B348",
+      "codes": [
+        "B348"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "generalization",
+      "asPrefix": [
+        "generalization of"
+      ]
+    },
+    {
+      "spelling": "B444",
+      "codes": [
+        "B444"
+      ],
+      "category": "Concept-transforming operators",
+      "tier": "regular",
+      "gloss": "metaphor",
+      "asPrefix": [
+        "metaphor for"
+      ]
+    },
+    {
+      "spelling": "B449",
+      "codes": [
+        "B449"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "minus, no, without",
+      "asPrefix": [
+        "without"
+      ]
+    },
+    {
+      "spelling": "B578",
+      "codes": [
+        "B578"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "same, equal, equality",
+      "asPrefix": [
+        "same as"
+      ]
+    },
+    {
+      "spelling": "B502/B167",
+      "codes": [
+        "B502",
+        "B167"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "blissymbol part",
+      "asPrefix": [
+        "part of Blissymbol",
+        "part of Bliss word"
+      ]
+    },
+    {
+      "spelling": "B502",
+      "codes": [
+        "B502"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "part, bit, piece, portion",
+      "asPrefix": [
+        "part of"
+      ]
+    },
+    {
+      "spelling": "B102",
+      "codes": [
+        "B102"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "about, concerning, regarding, in relation to, of, on",
+      "asPrefix": [
+        "about",
+        "concerning",
+        "regarding",
+        "in relation to"
+      ]
+    },
+    {
+      "spelling": "B104",
+      "codes": [
+        "B104"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "across",
+      "asPrefix": [
+        "across"
+      ]
+    },
+    {
+      "spelling": "B109",
+      "codes": [
+        "B109"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "after, behind",
+      "asPrefix": [
+        "after",
+        "behind"
+      ]
+    },
+    {
+      "spelling": "B111",
+      "codes": [
+        "B111"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "against, opposed to",
+      "asPrefix": [
+        "against"
+      ]
+    },
+    {
+      "spelling": "B120/B120",
+      "codes": [
+        "B120",
+        "B120"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "along with",
+      "asPrefix": [
+        "along with"
+      ]
+    },
+    {
+      "spelling": "B162/B368",
+      "codes": [
+        "B162",
+        "B368"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "among, amongst",
+      "asPrefix": [
+        "among"
+      ]
+    },
+    {
+      "spelling": "B134",
+      "codes": [
+        "B134"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "around",
+      "asPrefix": [
+        "around"
+      ]
+    },
+    {
+      "spelling": "B135",
+      "codes": [
+        "B135"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "at",
+      "asPrefix": [
+        "at"
+      ]
+    },
+    {
+      "spelling": "B158",
+      "codes": [
+        "B158"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "before, in front of, prior to",
+      "asPrefix": [
+        "before",
+        "in front of",
+        "prior to"
+      ]
+    },
+    {
+      "spelling": "B162",
+      "codes": [
+        "B162"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "between",
+      "asPrefix": [
+        "between"
+      ]
+    },
+    {
+      "spelling": "B195",
+      "codes": [
+        "B195"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "by, by means of, of",
+      "asPrefix": [
+        "by"
+      ]
+    },
+    {
+      "spelling": "B482",
+      "codes": [
+        "B482"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "on",
+      "asPrefix": [
+        "on"
+      ]
+    },
+    {
+      "spelling": "B491",
+      "codes": [
+        "B491"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "out of, exit (forward)",
+      "asPrefix": [
+        "out of (forward)"
+      ]
+    },
+    {
+      "spelling": "B492",
+      "codes": [
+        "B492"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "out of, exit (downward)",
+      "asPrefix": [
+        "out of (downward)"
+      ]
+    },
+    {
+      "spelling": "B977",
+      "codes": [
+        "B977"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "out of (upward)",
+      "asPrefix": [
+        "out of (upward)"
+      ]
+    },
+    {
+      "spelling": "B976",
+      "codes": [
+        "B976"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "out of (backward)",
+      "asPrefix": [
+        "out of (backward)"
+      ]
+    },
+    {
+      "spelling": "B402",
+      "codes": [
+        "B402"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "into, entrance",
+      "asPrefix": [
+        "into (forward)"
+      ]
+    },
+    {
+      "spelling": "B1124",
+      "codes": [
+        "B1124"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "into (downward)",
+      "asPrefix": [
+        "into (downward)"
+      ]
+    },
+    {
+      "spelling": "B1125",
+      "codes": [
+        "B1125"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "into (upward)",
+      "asPrefix": [
+        "into (upward)"
+      ]
+    },
+    {
+      "spelling": "B1123",
+      "codes": [
+        "B1123"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "into (backward)",
+      "asPrefix": [
+        "into (backward)"
+      ]
+    },
+    {
+      "spelling": "B490",
+      "codes": [
+        "B490"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "out, exterior, external, outside",
+      "asPrefix": [
+        "outside"
+      ]
+    },
+    {
+      "spelling": "B398",
+      "codes": [
+        "B398"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "in, inside, interior, internal",
+      "asPrefix": [
+        "inside"
+      ]
+    },
+    {
+      "spelling": "B493",
+      "codes": [
+        "B493"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "over, above, superior",
+      "asPrefix": [
+        "over",
+        "above",
+        "superior to"
+      ]
+    },
+    {
+      "spelling": "B676",
+      "codes": [
+        "B676"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "under, below, inferior",
+      "asPrefix": [
+        "under",
+        "below",
+        "inferior to"
+      ]
+    },
+    {
+      "spelling": "B1102",
+      "codes": [
+        "B1102"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "under (ground level)",
+      "asPrefix": [
+        "under (ground level)"
+      ]
+    },
+    {
+      "spelling": "B331",
+      "codes": [
+        "B331"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "for (in exchange for), instead",
+      "asPrefix": [
+        "instead of",
+        "in exchange for"
+      ]
+    },
+    {
+      "spelling": "B332",
+      "codes": [
+        "B332"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "for (the purpose of), in order to",
+      "asPrefix": [
+        "for the purpose of"
+      ]
+    },
+    {
+      "spelling": "B337",
+      "codes": [
+        "B337"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "from",
+      "asPrefix": [
+        "from"
+      ]
+    },
+    {
+      "spelling": "B657",
+      "codes": [
+        "B657"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "to, toward, towards",
+      "asPrefix": [
+        "to",
+        "toward"
+      ]
+    },
+    {
+      "spelling": "B653",
+      "codes": [
+        "B653"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "through",
+      "asPrefix": [
+        "through"
+      ]
+    },
+    {
+      "spelling": "B677",
+      "codes": [
+        "B677"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "until, till, to",
+      "asPrefix": [
+        "until"
+      ]
+    },
+    {
+      "spelling": "B160",
+      "codes": [
+        "B160"
+      ],
+      "category": "Relational operators",
+      "tier": "regular",
+      "gloss": "belongs to, of (possessive)",
+      "asPrefix": [
+        "belongs to"
+      ]
+    },
+    {
+      "spelling": "B100",
+      "codes": [
+        "B100"
+      ],
+      "category": "Determiners",
+      "tier": "regular",
+      "gloss": "a, an, any",
+      "asPrefix": [
+        "any",
+        "unspecific to"
+      ]
+    },
+    {
+      "spelling": "B647",
+      "codes": [
+        "B647"
+      ],
+      "category": "Determiners",
+      "tier": "regular",
+      "gloss": "the",
+      "asPrefix": [
+        "specific to"
+      ]
+    },
+    {
+      "spelling": "B368/B368/B368",
+      "codes": [
+        "B368",
+        "B368",
+        "B368"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "very very much, very very many",
+      "asPrefix": [
+        "very very much",
+        "very very many"
+      ]
+    },
+    {
+      "spelling": "B368/B368",
+      "codes": [
+        "B368",
+        "B368"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "very much, very many",
+      "asPrefix": [
+        "very much",
+        "very many"
+      ]
+    },
+    {
+      "spelling": "B368",
+      "codes": [
+        "B368"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "group of, much of, many of, quantity of",
+      "asPrefix": [
+        "group of",
+        "much",
+        "many"
+      ]
+    },
+    {
+      "spelling": "B117",
+      "codes": [
+        "B117"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "all, every, everything, total, whole",
+      "asPrefix": [
+        "all",
+        "every"
+      ]
+    },
+    {
+      "spelling": "B11/B117",
+      "codes": [
+        "B11",
+        "B117"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "both",
+      "asPrefix": [
+        "both"
+      ]
+    },
+    {
+      "spelling": "B10/B117",
+      "codes": [
+        "B10",
+        "B117"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "each, every",
+      "asPrefix": [
+        "each",
+        "every"
+      ]
+    },
+    {
+      "spelling": "B286",
+      "codes": [
+        "B286"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "either",
+      "asPrefix": [
+        "either"
+      ]
+    },
+    {
+      "spelling": "B449/B286",
+      "codes": [
+        "B449",
+        "B286"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "neither",
+      "asPrefix": [
+        "neither"
+      ]
+    },
+    {
+      "spelling": "B951",
+      "codes": [
+        "B951"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "half, one-half",
+      "asPrefix": [
+        "half of"
+      ]
+    },
+    {
+      "spelling": "B962",
+      "codes": [
+        "B962"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "quarter, one quarter",
+      "asPrefix": [
+        "one quarter of"
+      ]
+    },
+    {
+      "spelling": "B1151",
+      "codes": [
+        "B1151"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "one third",
+      "asPrefix": [
+        "one third of"
+      ]
+    },
+    {
+      "spelling": "B1152",
+      "codes": [
+        "B1152"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "two thirds",
+      "asPrefix": [
+        "two thirds of"
+      ]
+    },
+    {
+      "spelling": "B1153",
+      "codes": [
+        "B1153"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "three quarters",
+      "asPrefix": [
+        "three quarters of"
+      ]
+    },
+    {
+      "spelling": "B559/B11",
+      "codes": [
+        "B559",
+        "B11"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "several",
+      "asPrefix": [
+        "several"
+      ]
+    },
+    {
+      "spelling": "B9",
+      "codes": [
+        "B9"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "zero, 0, zero (digit), zero (index: the 0th)",
+      "asPrefix": [
+        "zero (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B10",
+      "codes": [
+        "B10"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "one, 1, one (digit), one (index: the 1st)",
+      "asPrefix": [
+        "one (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B11",
+      "codes": [
+        "B11"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "two, 2, two (digit), two (index: the 2nd)",
+      "asPrefix": [
+        "two (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B12",
+      "codes": [
+        "B12"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "three, 3, three (digit), three (index: the 3rd)",
+      "asPrefix": [
+        "three (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B13",
+      "codes": [
+        "B13"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "four, 4, four (digit), four (index: the 4th)",
+      "asPrefix": [
+        "four (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B14",
+      "codes": [
+        "B14"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "five, 5, five (digit), five (index: the 5th)",
+      "asPrefix": [
+        "five (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B15",
+      "codes": [
+        "B15"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "six, 6, six (digit), six (index: the 6th)",
+      "asPrefix": [
+        "six (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B16",
+      "codes": [
+        "B16"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "seven, 7, seven (digit), seven (index: the 7th)",
+      "asPrefix": [
+        "seven (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B17",
+      "codes": [
+        "B17"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "eight, 8, eight (digit), eight (index: the 8th)",
+      "asPrefix": [
+        "eight (quantifier)"
+      ]
+    },
+    {
+      "spelling": "B18",
+      "codes": [
+        "B18"
+      ],
+      "category": "Quantifiers",
+      "tier": "regular",
+      "gloss": "nine, 9, nine (digit), nine (index: the 9th)",
+      "asPrefix": [
+        "nine (quantifier)"
+      ]
+    }
+  ]
+}

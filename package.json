@@ -1,0 +1,33 @@
+{
+  "name": "blissbench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Frozen benchmark kit for interpreting Blissymbolics words with AI. Pins the eligible target set and the scorer; the prompt/model/context in between is configurable per run.",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "blissbench-build-indicators": "bin/build-indicators.js",
+    "blissbench-build-modifiers": "bin/build-modifiers.js",
+    "blissbench-build-manifest": "bin/build-manifest.js",
+    "blissbench-score": "bin/score.js",
+    "blissbench-show-context": "bin/show-context.js"
+  },
+  "scripts": {
+    "build:indicators": "node bin/build-indicators.js",
+    "build:modifiers": "node bin/build-modifiers.js",
+    "build:manifest": "node bin/build-manifest.js",
+    "build": "node bin/build-indicators.js && node bin/build-modifiers.js && node bin/build-manifest.js",
+    "score": "node bin/score.js",
+    "show-context": "node bin/show-context.js",
+    "example": "node examples/end-to-end.example.js",
+    "demo": "node examples/collect.example.js --set 50 --output results/demo.jsonl",
+    "baseline": "node examples/baseline.example.js --output results/baseline.jsonl",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MPL-2.0"
+}

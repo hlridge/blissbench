@@ -1,0 +1,7 @@
+# Keep source line endings consistent (LF) across machines...
+* text=auto eol=lf
+
+# ...but keep the snapshot and frozen artifacts BYTE-EXACT, so the manifest
+# sha256 and the test sets are identical on every OS regardless of git settings.
+*.json -text
+*.jsonl -text

@@ -1,0 +1,105 @@
+{
+  "kitVersion": "0.1.0",
+  "sourceFile": "blissary-bliss-dictionary-export-2026-05-23.json",
+  "sha256": "b54a1ec3bf215f3d85de3a44daf0f6de4fda173d7d74707ad787fe5e6ecfa164",
+  "generatedAt": "2026-06-02T15:24:21.618Z",
+  "counts": {
+    "total": 6420,
+    "eligible": 4186,
+    "excludedByPrimaryRule": {
+      "exclude-characters": 1165,
+      "exclude-indicators": 40,
+      "valid-bcode-spelling": 188,
+      "min-two-characters": 400,
+      "exclude-full-modifier": 14,
+      "exclude-non-preferred": 134,
+      "require-word": 293
+    },
+    "failsRuleIndependent": {
+      "exclude-characters": 1205,
+      "require-word": 1490,
+      "valid-bcode-spelling": 1334,
+      "min-two-characters": 1814,
+      "exclude-indicators": 40,
+      "exclude-non-preferred": 167,
+      "exclude-full-modifier": 37
+    }
+  },
+  "sets": {
+    "seed": "blissbench-v1",
+    "stratifyBy": [
+      "pos",
+      "charBucket"
+    ],
+    "sizes": [
+      50,
+      100,
+      300,
+      1000,
+      "all"
+    ],
+    "files": [
+      {
+        "size": 50,
+        "count": 50,
+        "file": "set-50.jsonl"
+      },
+      {
+        "size": 100,
+        "count": 100,
+        "file": "set-100.jsonl"
+      },
+      {
+        "size": 300,
+        "count": 300,
+        "file": "set-300.jsonl"
+      },
+      {
+        "size": 1000,
+        "count": 1000,
+        "file": "set-1000.jsonl"
+      },
+      {
+        "size": "all",
+        "count": 4186,
+        "file": "set-all.jsonl"
+      }
+    ]
+  },
+  "modifiers": {
+    "count": 85,
+    "categories": 8
+  },
+  "indicators": {
+    "count": 41,
+    "groups": 4
+  },
+  "eligibilityRuleIds": [
+    "exclude-indicators",
+    "exclude-characters",
+    "require-word",
+    "valid-bcode-spelling",
+    "min-two-characters",
+    "exclude-full-modifier",
+    "require-answer",
+    "exclude-non-preferred"
+  ],
+  "answerKeyRuleIds": [
+    "comma-alternatives",
+    "disambiguator-strip",
+    "inflection-both-forms",
+    "curated-aliases",
+    "dialect-variants"
+  ],
+  "normalizationRuleIds": [
+    "lowercase",
+    "strip-punctuation",
+    "collapse-whitespace",
+    "verb-infinitive"
+  ],
+  "answerAliases": {
+    "count": 876,
+    "formsAdded": 1051,
+    "curated": 721
+  }
+}
