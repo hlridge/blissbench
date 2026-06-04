@@ -100,6 +100,7 @@ meaning is never included: that would be the answer. The fields:
 | `subwords` | contiguous fragments of the word that are themselves dictionary words |
 | `siblings` | other words with the same base glyphs but different indicators (the grammar / sense markers), e.g. *murder* ↔ *to murder* (action indicator) |
 | `neighbours` | other words sharing a leading run of glyphs (which often, but not always, carries the head/classifier) or a trailing run, ranked by how much they share |
+| `legend` | the words inside the neighbours' **non-shared** parts — the symbols that differ from the target, decoded as single glyphs and multi-glyph sequences (like `subwords`), so those codes aren't opaque |
 
 For a spelling that may not be a dictionary word (the unknown-word case), use
 `buildContextFromSpelling(spelling)`. It returns the same fields plus `exactMatch`: if the
@@ -154,9 +155,12 @@ Full file list:
 | `bin/score.js` | the shared scorer |
 | `bin/show-context.js` | print one word's context |
 | `examples/end-to-end.example.js` | the whole loop in one file (`npm run example`) |
+| `examples/build-method.example.js` | the smallest worked method: hints → a prompt string (`npm run method`) |
 | `examples/collect.example.js` | a minimal submission template (`npm run demo`) |
 | `examples/baseline.example.js` | a no-API helper-gloss baseline, a floor to clear (`npm run baseline`) |
 | `schemas/submission.schema.json` | the result format your pipeline emits |
+| `src/lib/run-record.js` | `recordRun()` — saves a method copy + run details + prompts/answers |
+| `runs/<name>.<timestamp>.run.json` (+ `.interactions.jsonl`) | the durable, timestamped record of what produced a score (kept, not gitignored) |
 
 ## The Kit API
 
@@ -193,6 +197,67 @@ The target entry is sealed deliberately: its gloss, explanation, part of speech 
 derivation are tells, so `getEligibleTargets()` and `buildContext()` never expose them. Build
 prompts from those methods, not from `getEntry` / `answerKeyOf` / `derivationOf`.
 
+## Build your method
+
+The "middle" is the part you own: take what `buildContext` hands you and turn it into a prompt.
+There is no required shape — you pick which hints to use and how to phrase them.
+`examples/build-method.example.js` (`npm run method`) is the smallest honest version: a two-line
+task, then it concatenates *some* of the hints (and skips the rest on purpose).
+
+```js
+const buildPrompt = (c) => {
+  const out = [];
+  out.push('Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.');
+  out.push(`Word: ${c.spelling}  (${c.charCount} symbols)`);
+  if (c.subwords.length) {
+    out.push('\nParts of it that are themselves words:');
+    for (const s of c.subwords) out.push(`  ${s.spelling} = ${s.helpers.map(h => h.gloss).join('; ')}`);
+  }
+  const related = c.neighbours.sharedStart.concat(c.neighbours.sharedEnd).slice(0, 6);
+  if (related.length) {
+    out.push('\nRelated words that share symbols with it:');
+    for (const n of related) out.push(`  ${n.spelling} = ${n.gloss}`);
+  }
+  if (c.legend.length) {
+    out.push('\nWhat the other symbols in those related words mean:');
+    for (const p of c.legend.slice(0, 10)) out.push(`  ${p.spelling} = ${p.gloss}`);
+  }
+  return out.join('\n');               // ← send this string to your model
+};
+```
+
+Run it and you see the **materialized** prompt — exactly what those variables expand to, for
+`B1175` (`B426/B643`):
+
+```text
+Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.
+Word: B426/B643  (2 symbols)
+
+Parts of it that are themselves words:
+  B426 = limited time, interval, period, awhile, for a while; temporary
+  B643 = teenager, adolescent, youth
+
+Related words that share symbols with it:
+  B426/B562 = rest period, break
+  B426/B412 = lesson, lecture, class
+  B426/B420 = long time
+  …
+
+What the other symbols in those related words mean:
+  B392/B106 = activity centre
+  B412/B719 = sport (class)
+  B106 = activity, male gender (in combinations)
+  B392 = house, building, dwelling, residence
+  …
+```
+
+That is the whole idea: the codes arrive as evidence (`B426 = period`, `B643 = youth`), the
+`legend` decodes the symbols *inside* the related words, and a reader needs no prior Bliss to
+follow it. This is **one** example, not part of the frozen contract — change the task line, use
+more or fewer hints, add the modifier/indicator readings, lay it out differently. Swap the final
+`return`/`console.log` for your API call and you have a pipeline; wire it into the submission loop
+in the next section.
+
 ## Run a set and score it
 
 Your pipeline writes a **submission**: one JSONL row per target you answered
@@ -203,9 +268,10 @@ Your pipeline writes a **submission**: one JSONL row per target you answered
 ```
 
 `results/my-run.jsonl` is simply **that file, your pipeline's output**, and the name is yours.
-You don't write the rows by hand: `examples/collect.example.js` is the template that produces
-them. It loops the targets of a chosen set, hands each `buildContext` to a `callYourModel` stub
-(swap in your real API call), and writes the rows. So a full run is two commands:
+You don't write the rows by hand: `examples/collect.example.js` is the submission **harness** —
+it loops the targets of a chosen set, hands each `buildContext` to a `callYourModel` stub, and
+writes the rows. (The prompt-building seam itself is **Build your method** above; here it's just
+a stub so the template runs.) So a full run is two commands:
 
 ```bash
 # 1. write a submission for set 50 (edit collect.example.js: plug in your model):
@@ -246,6 +312,30 @@ The same scoring is available as a function: `createReport(submission, answers, 
 universe, manifest })` returns `{ summary, scored }`, and `formatReport(summary)` renders it.
 For a no-API sanity check, `npm run baseline` guesses straight from helper glosses, a floor
 to improve on.
+
+## Keep your method (reproducibility is half yours)
+
+The kit freezes the questions and the scorer — but **not your method**. Your method is your
+code (the prompt-builder + model call), and the kit can't store or version it for you. So
+reproducing a score needs three things: the same **data** (the `sha256` proves it), the same
+**set** (the seed), and **your method** — and only you can keep that last one. Edit the file and
+re-run and the earlier score's recipe is gone unless you saved it.
+
+To make that automatic, `collect.example.js` writes a **run record** next to every run, in a
+kept `runs/` folder (not throwaway `results/`). The file name carries the timestamp, so
+re-running never overwrites an earlier record:
+
+- `runs/<name>.<timestamp>.run.json` — the date, the set, the snapshot `sha256` + kit version,
+  your `runner` and `promptVersion`, the model (if you name it), and **a copy of your method
+  file** (with its own hash), so the recipe is literally in the record — no copy-paste.
+- `runs/<name>.<timestamp>.interactions.jsonl` — the exact **prompt sent and the answer** for
+  each word. This is the real reproduce/re-grade material: you can inspect or re-score it
+  without calling the model again.
+
+> **It's a record, not a replay button.** A method usually calls a model over the network, which
+> can change, be retired, or answer differently next time — so a saved record can't guarantee the
+> same numbers later. What it guarantees is that you can always see *exactly* what produced a
+> score. (`recordRun()` in `src/lib/run-record.js`; call it from your own runner too.)
 
 ## Ground rules
 

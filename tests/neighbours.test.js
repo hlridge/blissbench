@@ -115,6 +115,62 @@ test('buildContext caps neighbours at 8 per group, deepest-first, with omitted c
   assert.equal(ctx.neighbours.omitted.sharedEnd, Math.max(0, full.sharedEnd.length - 8));
 });
 
+// --- legend: decode the neighbours' NON-SHARED parts -------------------------
+// Target B1 = B100/B200/B300. B2 is a shared-START neighbour (shares B100), so its
+// non-shared tail is B401/B402; B3 is a shared-END neighbour (shares B300), so its
+// non-shared head is B777. B4/B5/B6/B7 make those off-parts decodable as words,
+// including the MULTI-glyph sequence B401/B402. B8 (B100) is a target subword, so it
+// must NOT appear in the legend (the target's own spans are excluded).
+const legendDataset = () =>
+  createDataset({
+    entries: [
+      word(1, 'B100/B200/B300', 'TARGET'),
+      word(2, 'B100/B401/B402', 'shared-start, tail B401/B402'),
+      word(3, 'B777/B300', 'shared-end, head B777'),
+      word(4, 'B401', 'alpha'),
+      word(5, 'B402', 'beta'),
+      word(6, 'B401/B402', 'widget'), // a MULTI-glyph off-part word
+      word(7, 'B777', 'omega'),
+      word(8, 'B100', 'leading glyph (a target subword, never a legend entry)')
+    ],
+    modifiers: { entries: [], conditionalExceptions: [] },
+    indicators: { entries: [] }
+  });
+
+test('legend decodes neighbours\' non-shared parts: single AND multi-glyph, target spans excluded', () => {
+  const ds = legendDataset();
+  const ctx = ds.buildContext('B1');
+  // B401/B402 (len 2) first, then the singles by spelling: B401, B402, B777.
+  assert.deepEqual(ctx.legend.map((p) => p.spelling), ['B401/B402', 'B401', 'B402', 'B777']);
+
+  const multi = ctx.legend.find((p) => p.spelling === 'B401/B402');
+  assert.equal(multi.length, 2);
+  assert.equal(multi.gloss, 'widget'); // a multi-glyph sequence resolved to its own word
+  assert.equal(ctx.legend.find((p) => p.spelling === 'B777').gloss, 'omega'); // shared-END head decoded too
+
+  const spellings = new Set(ctx.legend.map((p) => p.spelling));
+  assert.equal(spellings.has('B100'), false, 'a target subword span is never a legend entry');
+  for (const p of ctx.legend) assert.notEqual(p.id, 'B1', 'the target itself is never decoded into its own legend');
+});
+
+test('real kit: buildContext.legend is present, shaped, leak-free, and surfaces multi-glyph parts', async () => {
+  const kit = await loadKit();
+  const ds = kit.dataset;
+  const targets = ds.getEligibleTargets();
+
+  const ctx0 = ds.buildContext(targets[0].targetId);
+  assert.ok(Array.isArray(ctx0.legend), 'legend is an array on every context');
+  for (const p of ctx0.legend) {
+    assert.equal(typeof p.spelling, 'string');
+    assert.equal(typeof p.gloss, 'string');
+    assert.notEqual(p.id, ctx0.targetId, 'legend never resolves to the target itself');
+  }
+
+  // Multi-glyph decoding works on real data (we measured ~2071 such targets).
+  const withMulti = targets.slice(0, 400).find((t) => ds.buildContext(t.targetId).legend.some((p) => p.length >= 2));
+  assert.ok(withMulti, 'some target has a multi-glyph legend entry');
+});
+
 test('real kit: every neighbour shares the right affix and is disjoint from self/siblings', async () => {
   const kit = await loadKit();
   const ds = kit.dataset;

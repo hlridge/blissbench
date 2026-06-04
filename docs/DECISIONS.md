@@ -339,6 +339,32 @@ shifts scores, so runs are only comparable if they share it (it's part of the sc
 not the snapshot hash). Settle it before comparing rounds, which is why it was decided
 deliberately and frozen here.
 
+## 16. The legend: decoding the neighbours' non-shared parts
+
+A neighbour is handed over with its full spelling and its *whole-word* gloss (e.g.
+`B1/B2/B5/B6 = "village"`), but the glyphs that **differ** from the target (`B5`, `B6`) carry
+no gloss of their own. A reader sees a known word built partly from opaque codes. Yet what
+those codes mean is exactly the signal that says what the shared run combines with, and so
+what the target is likely to mean.
+
+**Decision: decode each shown neighbour's non-shared part the same way subwords decode the
+target.** For every neighbour in the (capped) `buildContext` view, take only its non-shared
+portion (the tail after a shared start, or the head before a shared end), enumerate its
+contiguous spans — **single glyphs AND multi-glyph sequences** — and resolve each to its own
+dictionary word(s). The result is a deduped, context-wide **`legend`**.
+
+- **Why the cap makes this cheap.** The blow-up worry is about the *uncapped* neighbour set
+  (hundreds). The shown set is ≤ 8 per group and each non-shared part is tiny (tail ≤ 3, head
+  ≤ 2 glyphs), so decoding it is a few dozen lookups, deduped — not a combinatorial explosion.
+  The cap is what makes decoding affordable, and it also means a rare off-glyph may appear only
+  once, where a direct gloss helps more than hoping to triangulate across many neighbours.
+- **No repetition.** Parts the target's own `subwords` already explain are excluded, and the
+  same part surfaced by several neighbours is listed once.
+- **Leak-safe and fair game** (§3, §6): every legend entry is *another* preferred entry (the
+  target's own entry is never offered); decoding evidence from other entries is the task.
+- *(Presentation only: the legend doesn't change eligibility, the target set, or the snapshot
+  hash. `legendFor` in `src/query/dataset.js`; see the `legend` field in the README field table.)*
+
 ---
 
 ### Open / revisitable

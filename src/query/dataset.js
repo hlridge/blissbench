@@ -95,6 +95,19 @@ const spanBaseSet = (baseArr) => {
   return set;
 };
 
+// Ordered contiguous spans (singles and longer, up to the whole array) of a base
+// array, as joined strings. Used to decode a neighbour's non-shared part into the
+// dictionary words it contains, exactly like subwords decode the target.
+const contiguousSpansOf = (baseArr) => {
+  const spans = [];
+  for (let start = 0; start < baseArr.length; start += 1) {
+    for (let end = start + 1; end <= baseArr.length; end += 1) {
+      spans.push(baseArr.slice(start, end).join('/'));
+    }
+  }
+  return spans;
+};
+
 export const createDataset = ({ entries, modifiers, indicators }) => {
   setModifierReference(modifiers);
   // Curated indicator meaning (authoritative; NOT the dictionary gloss).
@@ -334,6 +347,48 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     }
   });
 
+  /**
+   * Decode the SHOWN neighbours: the dictionary words found inside each neighbour's
+   * NON-SHARED portion (the glyph(s) that differ from the target), as single glyphs
+   * AND multi-glyph contiguous sequences, exactly like subwords decode the target.
+   * So a neighbour B1/B2/B5/B6 of target B1/B2/B3/B4 contributes B5, B6 and (if it is
+   * a word) B5/B6, not just an opaque code. Deduped across neighbours, and excluding
+   * any part the target's own subwords already explain, so nothing is repeated.
+   * Leak-safe: every part is ANOTHER preferred entry (selfId is never offered); the
+   * target's sealed gloss is untouched. Only the capped neighbours are decoded, so
+   * the work is tiny: each non-shared part is <= MAX_START_TAIL / MAX_END_HEAD glyphs.
+   */
+  const legendFor = (spelling, selfId, capped) => {
+    const targetSpans = spanBaseSet(baseArrayOf(spelling) || []); // already shown via subwords
+    const seenPart = new Set();
+    const legend = [];
+    const harvest = (neighbours, side) => {
+      for (const nb of neighbours) {
+        const nbBase = (nb.spelling || '').split('/').filter(Boolean);
+        if (!nbBase.length) continue;
+        const off = side === 'start'
+          ? nbBase.slice(nb.sharedLen)                     // tail after the shared prefix
+          : nbBase.slice(0, nbBase.length - nb.sharedLen); // head before the shared suffix
+        for (const part of contiguousSpansOf(off)) {
+          if (targetSpans.has(part) || seenPart.has(part)) continue;
+          seenPart.add(part);
+          for (const h of helpersForBase(part, selfId)) {
+            legend.push({ spelling: part, length: part.split('/').length, id: h.id, gloss: h.gloss, pos: h.pos });
+          }
+        }
+      }
+    };
+    harvest(capped.sharedStart, 'start');
+    harvest(capped.sharedEnd, 'end');
+    // Longest sequences first (the most informative), then stable by spelling + id.
+    return legend.sort(
+      (a, b) =>
+        b.length - a.length ||
+        a.spelling.localeCompare(b.spelling, 'en', { numeric: true }) ||
+        a.id.localeCompare(b.id, 'en', { numeric: true })
+    );
+  };
+
   const modifiersOf = (spelling) => {
     const parsed = parseBCodeWord(spelling);
     return {
@@ -384,6 +439,7 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
   // target's id for buildContext, or null for an arbitrary spelling with no "self".
   const assembleBlocks = (spelling, selfId) => {
     const parsed = parseBCodeWord(spelling);
+    const neighbours = capNeighbours(neighboursFor(spelling, selfId));
     return {
       spelling,
       charCount: parsed.characters.length,
@@ -405,7 +461,11 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
       // Third match group: shared-affix words (same leading run, which often carries
       // the head/classifier, or shared tail), capped per group with an `omitted`
       // count, full set via neighboursOf.
-      neighbours: capNeighbours(neighboursFor(spelling, selfId))
+      neighbours,
+      // Decoded parts of those neighbours: dictionary words inside each neighbour's
+      // non-shared portion (single glyphs AND multi-glyph sequences, like subwords),
+      // so the codes that differ from the target are not opaque. Deduped; leak-safe.
+      legend: legendFor(spelling, selfId, neighbours)
     };
   };
 

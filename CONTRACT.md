@@ -8,7 +8,7 @@
 
 - Source: `data/blissary-bliss-dictionary-export-2026-05-23.json`
 - SHA-256: `b54a1ec3bf215f3d85de3a44daf0f6de4fda173d7d74707ad787fe5e6ecfa164`
-- Kit version: `0.1.0`
+- Kit version: `0.2.0`
 - Entries: **6420** total → **4186** eligible targets
 
 Scores are comparable only across runs that share the same SHA-256 (and set seed).
@@ -30,6 +30,10 @@ tell, so the kit never exposes it when building context. A prompt may use only:
   shared trailing run, but are neither a fragment
   (subword) nor a same-base variant (sibling). Ranked longest-shared-first; `buildContext`
   caps each group with an `omitted` count, and the full set is available via `neighboursOf`.
+- **legend**: the dictionary words inside those neighbours' NON-SHARED parts (the glyphs that
+  differ from the target), decoded as single glyphs AND multi-glyph contiguous sequences, the
+  way subwords decode the target, so the differing codes are not opaque. Deduped, and excluding
+  any part the target's own subwords already explain. Same fair-game leak policy (other entries).
 
 Subword/sibling/neighbour matching is **indicator-agnostic**: it compares the base character
 sequence, ignoring sense (`;B97`/`;B6436`) and grammatical (`;;…`) indicators, so a fragment

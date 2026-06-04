@@ -87,6 +87,10 @@ const renderContract = ({ manifest, report, modifiers, indicators, sets, aliases
   push('  shared trailing run, but are neither a fragment');
   push('  (subword) nor a same-base variant (sibling). Ranked longest-shared-first; `buildContext`');
   push('  caps each group with an `omitted` count, and the full set is available via `neighboursOf`.');
+  push('- **legend**: the dictionary words inside those neighbours\' NON-SHARED parts (the glyphs that');
+  push('  differ from the target), decoded as single glyphs AND multi-glyph contiguous sequences, the');
+  push('  way subwords decode the target, so the differing codes are not opaque. Deduped, and excluding');
+  push('  any part the target\'s own subwords already explain. Same fair-game leak policy (other entries).');
   push('');
   push('Subword/sibling/neighbour matching is **indicator-agnostic**: it compares the base character');
   push('sequence, ignoring sense (`;B97`/`;B6436`) and grammatical (`;;…`) indicators, so a fragment');

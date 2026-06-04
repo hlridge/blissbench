@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { createDataset } from './query/dataset.js';
 
-export const KIT_VERSION = '0.1.0';
+export const KIT_VERSION = '0.2.0';
 
 const KIT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const paths = {
@@ -78,6 +78,7 @@ export {
   isVerbPartOfSpeech
 } from './rules/scoring-rules.js';
 export { createReport, formatReport } from './report.js';
+export { buildRunRecord, writeRunRecord, recordRun, runRecordBaseName } from './lib/run-record.js';
 export {
   parseBCodeWord,
   normalizeSpelling,

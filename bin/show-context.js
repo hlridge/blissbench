@@ -91,6 +91,12 @@ const main = async () => {
   nb.sharedStart.forEach(showNeighbour);
   console.log(`  shared end: shared tail (${nb.sharedEnd.length})${moreOf('sharedEnd')}:`);
   nb.sharedEnd.forEach(showNeighbour);
+
+  const legend = ctx.legend || [];
+  console.log(`\nLegend: words inside the neighbours' non-shared parts (${legend.length}):`);
+  for (const p of legend) {
+    console.log(`  ${p.spelling.padEnd(16)} ${(p.id || '').padEnd(8)} (${p.pos || '-'}) "${p.gloss}"`);
+  }
 };
 
 main().catch((error) => {
