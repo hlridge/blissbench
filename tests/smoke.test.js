@@ -29,11 +29,18 @@ import { orderTargetsStratified } from '../src/lib/sampling.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-test('B-code parser splits characters and indicators', () => {
+test('B-code parser keeps character-level indicators in place', () => {
+  // A single ';' indicator stays attached to its character (B86 on B398), in position —
+  // not hoisted to word level. Scope is decided by ';' vs ';;', not by the indicator code.
   const parsed = parseBCodeWord('B398;B86/B688');
   assert.equal(parsed.characters.length, 2);
-  // B86 is a word-level indicator → moved after ;;
-  assert.match(parsed.spelling, /;;B86$/);
+  assert.equal(parsed.spelling, 'B398;B86/B688');
+  assert.equal(parsed.indicators[0].scope, 'character');
+  assert.equal(parsed.indicators[0].characterIndex, 0);
+  // A double ';;' is still word-level.
+  const word = parseBCodeWord('B398/B688;;B86');
+  assert.match(word.spelling, /;;B86$/);
+  assert.equal(word.indicators[0].scope, 'whole word');
 });
 
 test('modifiers.json carries a data-driven gloss + curated asPrefix readings', async () => {

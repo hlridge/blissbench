@@ -113,6 +113,33 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
   // Curated indicator meaning (authoritative; NOT the dictionary gloss).
   const indicatorByCode = new Map(((indicators && indicators.entries) || []).map((e) => [e.code, e]));
 
+  // A `;`-attached code that is NOT a curated indicator is a SUB-CHARACTER glyph
+  // (composition/derivation, e.g. "change" B213 = "B423;B695" = life + water), which makes
+  // the entry an atomic character. Curated indicators (;B97 concrete, ;B81 action, …) are
+  // diacritics, not sub-glyphs. We classify by the indicator SET, never by the isChar/isWord
+  // flags (unreliable in the snapshot: contradictory or missing on hundreds of entries).
+  const hasSubglyphDerivation = (spelling) => {
+    try {
+      return parseBCodeWord(spelling).characters.some((c) =>
+        c.indicators.some((code) => !indicatorByCode.has(code))
+      );
+    } catch {
+      return false;
+    }
+  };
+  // The spelling to SHOW for an entry: base glyphs with their indicators kept inline
+  // (e.g. "B655;B97" = the concrete "clock" reading of "time" B655), so a helper found by
+  // the indicator-AGNOSTIC search still carries the exact notation its gloss refers to. An
+  // atomic character (sub-glyph derivation, or a shape-primitive code) shows as its own id.
+  const notationOf = (entry) => {
+    if (hasSubglyphDerivation(entry.spelling)) return entry.id;
+    try {
+      return normalizeSpelling(entry.spelling);
+    } catch {
+      return entry.id;
+    }
+  };
+
   const normalized = entries.map(normalizeRawEntry);
   const byId = new Map();
   const bySpelling = new Map();
@@ -137,19 +164,22 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     for (const spelling of canonicalSpellingsOf(entry)) {
       pushTo(bySpelling, spelling, entry);
     }
-    // Indicator-AGNOSTIC index. Addressable by id (so a single-code span matches a
-    // glyph entry as today) AND by base sequence (so grammatical/sense variants of
-    // the same glyphs match regardless of indicators). A Set dedups the case where
-    // id and base coincide (a single-character word).
-    for (const key of new Set([entry.id, baseSequenceOf(entry.spelling)])) {
+    // Indicator-AGNOSTIC index. Addressable by id AND by glyph sequence (so grammatical/
+    // sense variants of the same glyphs match regardless of indicators). A composite
+    // CHARACTER (sub-glyph derivation, §17) is atomic — its sequence is just its own id, so
+    // "change" (B423;B695) never lands in the "B423" (life) bucket; only real glyph
+    // sequences decompose. A Set dedups when id and sequence coincide.
+    const cleanBase = hasSubglyphDerivation(entry.spelling) ? null : baseArrayOf(entry.spelling);
+    const baseArr = cleanBase && cleanBase.length ? cleanBase : [entry.id];
+    for (const key of new Set([entry.id, baseArr.join('/')])) {
       pushTo(byBaseSpelling, key, entry);
     }
-    // Neighbour indexes: bucket by the first and last BASE glyph so shared-affix
-    // lookups only scan words that share the target's leading/trailing glyph.
-    const baseArr = baseArrayOf(entry.spelling);
-    if (baseArr && baseArr.length > 0) {
-      pushTo(byLeadingBaseChar, baseArr[0], { entry, baseArr });
-      pushTo(byTrailingBaseChar, baseArr[baseArr.length - 1], { entry, baseArr });
+    // Neighbour indexes: bucket by first/last glyph so shared-affix lookups only scan words
+    // sharing the target's leading/trailing glyph. Only real glyph sequences are neighbour
+    // candidates (a composite character or a shape-primitive code is not a neighbour-word).
+    if (cleanBase && cleanBase.length > 0) {
+      pushTo(byLeadingBaseChar, cleanBase[0], { entry, baseArr: cleanBase });
+      pushTo(byTrailingBaseChar, cleanBase[cleanBase.length - 1], { entry, baseArr: cleanBase });
     }
   }
 
@@ -176,10 +206,29 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
   // findByBaseSpelling('B206/B259/B532') returns both the noun and the verb form.
   const findByBaseSpelling = (spelling) => byBaseSpelling.get(baseSequenceOf(spelling)) || [];
 
+  // A word's OWN indicators (curated meaning), so a helper that is the ACTION or
+  // DESCRIPTION form is shown as such — "how its meaning came to be". Matching is
+  // indicator-agnostic, so one base returns every indicator variant (fear / to fear /
+  // afraid); this is what tells them apart, instead of inferring it from gloss wording.
+  // A composite character contributes none (its `;`-glyph is a sub-part, not a diacritic),
+  // and we never surface that sub-glyph as a bogus empty-meaning "indicator".
+  const ownIndicators = (entry) => {
+    if (hasSubglyphDerivation(entry.spelling)) return [];
+    try {
+      return indicatorsOf(entry.spelling);
+    } catch {
+      return [];
+    }
+  };
+
   const helperView = (entry) => ({
     id: entry.id,
+    // The exact indicator-bearing notation (e.g. "B655;B97" for the concrete "clock"),
+    // so a helper found by the indicator-agnostic search still shows which form it is.
+    notation: notationOf(entry),
     gloss: entry.gloss,
     pos: entry.pos,
+    indicators: ownIndicators(entry),
     answers: getAnswers(entry),
     explanation: getExplanation(entry)
   });
@@ -248,10 +297,12 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
   const neighbourView = (entry, sharedLen, sharedSpelling) => ({
     id: entry.id,
     spelling: baseSequenceOf(entry.spelling),
+    notation: notationOf(entry),
     sharedLen,
     sharedSpelling,
     gloss: entry.gloss,
     pos: entry.pos,
+    indicators: ownIndicators(entry),
     answers: getAnswers(entry),
     explanation: getExplanation(entry)
   });

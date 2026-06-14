@@ -48,7 +48,7 @@ const arg = (name, fallback) => {
 const buildPrompt = (c) => {
   const out = [];
   out.push('Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.');
-  out.push(`Word: ${c.spelling}  (${c.charCount} symbols)`);
+  out.push(`Word: ${c.spelling}  (${c.charCount} characters)`);
   if (c.subwords.length) {
     out.push('\nParts of it that are themselves words:');
     for (const s of c.subwords) out.push(`  ${s.spelling} = ${s.helpers.map((h) => h.gloss).join('; ')}`);

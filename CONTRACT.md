@@ -8,7 +8,7 @@
 
 - Source: `data/blissary-bliss-dictionary-export-2026-05-23.json`
 - SHA-256: `b54a1ec3bf215f3d85de3a44daf0f6de4fda173d7d74707ad787fe5e6ecfa164`
-- Kit version: `0.2.0`
+- Kit version: `0.3.0`
 - Entries: **6420** total → **4186** eligible targets
 
 Scores are comparable only across runs that share the same SHA-256 (and set seed).

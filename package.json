@@ -1,6 +1,6 @@
 {
   "name": "blissbench",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Frozen benchmark kit for interpreting Blissymbolics words with AI. Pins the eligible target set and the scorer; the prompt/model/context in between is configurable per run.",

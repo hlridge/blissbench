@@ -106,14 +106,14 @@ contestable "what counts as a synonym" judgement into eligibility for little gai
 
 ## 7. Subword & sibling matching is indicator-agnostic
 
-Indicators are grammatical diacritics (`;B97` concrete, `;B6436` abstract, `;;B81`
-action, `;;B86` description, …). The original matcher compared *exact* spellings, which
+Indicators are grammatical diacritics (`;B97` concrete, `;B6436` abstract, `;B81`
+action, `;B86` description, …). The original matcher compared *exact* spellings, which
 silently dropped a whole class of useful evidence: a fragment never matched an entry that
 carried a different indicator (so the verb form `to kill, to murder` was invisible when
 the target was a noun, and vice-versa).
 
 **Decision: match on the *base character sequence*, ignoring all indicators**: both
-sense markers (`B97`/`B6436`) and word-level grammatical indicators. Two consequences,
+sense markers (`B97`/`B6436`) and grammatical indicators. Two consequences,
 both intended:
 
 - **`subwordsOf`** (proper sub-spans) now surfaces grammatical and sense variants of a
@@ -121,7 +121,7 @@ both intended:
   gain at least one helper.** The sense/role isn't lost, it's reported separately in
   `indicators`.
 - **`siblings`** (new): entries whose *entire* base sequence equals the target's,
-  differing only by indicator (target *to murder* `B206/B259/B532;;B81` ↔ sibling
+  differing only by indicator (target *to murder* `B206;B81/B259/B532` ↔ sibling
   *murder* `B206/B259/B532`; or concrete ↔ abstract). These are presented as a **separate
   `siblings` field**, not folded into `subwords`, because a same-length variant isn't a
   "sub-word", and a prompt-builder may legitimately want to weight "same glyphs,
@@ -364,6 +364,49 @@ dictionary word(s). The result is a deduped, context-wide **`legend`**.
   target's own entry is never offered); decoding evidence from other entries is the task.
 - *(Presentation only: the legend doesn't change eligibility, the target set, or the snapshot
   hash. `legendFor` in `src/query/dataset.js`; see the `legend` field in the README field table.)*
+
+## 17. Characters are atomic: a derivation code is not a spelling
+
+An entry's `code` is sometimes a **sub-character derivation** — how a single glyph is drawn —
+not a multi-glyph word spelling. "change" (`B213`) is the character `B423;B695` (life +
+water); "day" (`B258`) is `B281;B636` (earth + …): one atomic glyph, addressable by its own
+B-id.
+
+The matcher used to parse *every* `code` as a word spelling and strip the `;`-part as an
+indicator, which **decomposed** these characters onto the wrong base — so "change", "death"
+and "reality" all collapsed into the **`B423` (life)** bucket and surfaced as bogus
+siblings/legend glosses for unrelated targets.
+
+**Decision: tell a composite character from an inflected one by the indicator SET, not the
+`isChar`/`isWord` flags** (unreliable here: contradictory on a few entries, absent on ~300). A
+`;`-attached code that is **not** a curated indicator (e.g. `B695` water) is a sub-glyph, so
+the entry is atomic and indexed by its own id; a `;`-attached **indicator** (`;B97` concrete,
+`;B81` action, …) is a diacritic, stripped for matching like any other. Effect: the `B423`
+bucket drops from 7 entries to the 4 that belong (life + its concrete/action/description
+inflections, all `;B97`/`;B81`/`;B86`), and a subword like `B313` (feeling) sheds the
+*religion/belief/rest* noise it had absorbed. Sub-character parts are etymology, not meaning here. *(Presentation only: no
+effect on eligibility, the 4186-target set, or the snapshot hash; **0** eligible targets
+affected. `hasSubglyphDerivation` in `src/query/dataset.js`.)*
+
+## 18. Helper entries carry their own indicators
+
+Because matching is indicator-agnostic (§7), one base sequence returns **every** indicator
+variant at once: the base `B313/B271/B1042` yields *fear* (no indicator), *to fear* (`;B81`
+action) and *afraid* (`;B86` description) together. Handed over with only their glosses,
+those co-listed entries look near-duplicate and the model is left to infer the grammatical
+difference from gloss wording.
+
+**Decision: every helper view (subword / sibling / neighbour) carries its own `indicators`**
+(curated meaning, both the sense markers and the word-level scopes), computed like the
+target's — so a helper that is the action or description form is shown as such, and "how its
+meaning came to be" is explicit (e.g. *heart* = *feeling* + the concrete indicator). A
+character contributes none (it is atomic, §17). Each helper also carries its exact
+indicator-bearing **`notation`** (e.g. `B655;B97` for the concrete "clock" reading of "time"
+`B655`), so a match found by the indicator-agnostic search still shows *which* form it is —
+the spelling the prompt's indicator description refers to. This is a materials enrichment, not
+a prompt-shape opinion: the middle layer decides whether and how to use it. *(Presentation
+only: no effect on eligibility, the target set, or the snapshot hash. `ownIndicators` /
+`notationOf` in `src/query/dataset.js`.)*
 
 ---
 
