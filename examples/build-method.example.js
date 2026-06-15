@@ -77,8 +77,8 @@ const buildPrompt = (c) => {
   // Show BOTH neighbour groups (an earlier version showed only the shared-start ones,
   // which left the glossary below looking unrelated). Track the non-shared symbols of
   // the neighbours we actually print, so the glossary can be limited to exactly those.
-  // Different entries can share one base spelling (a noun and its verb, say); merge
-  // them onto a single line so the same code is never printed twice.
+  // `dedupe` (used for the GLOSSARY below) merges a glyph's several senses — eye / to
+  // see / visible — onto one line so the same code is never printed twice.
   const dedupe = (items) => {
     const bySpelling = new Map();
     for (const n of items) {
@@ -91,15 +91,20 @@ const buildPrompt = (c) => {
   const shownParts = new Set();
   const printGroup = (label, items, side, omitted) => {
     if (!items.length) return;
-    const list = dedupe(items);
     out.push(`\n${label}`);
-    for (const n of list.slice(0, SHOW)) {
-      out.push(`  ${n.spelling} = ${n.glosses.join('; ')}`);
+    for (const n of items.slice(0, SHOW)) {
+      // Print each neighbour's indicator-bearing `.notation`, NOT its base `.spelling`.
+      // A noun and its verb share an identical base spelling (encouragement
+      // B949/B313/B967 vs to encourage B949;B81/B313/B967); the indicator is the only
+      // thing that tells them apart, so the base alone collapses two distinct words.
+      out.push(`  ${n.notation} = ${n.gloss}`);
+      // The glossary is keyed by BASE spelling, so derive the non-shared symbols from
+      // `.spelling` (not the notation) to keep it in sync with what we printed.
       const g = n.spelling.split('/');
       const offset = side === 'start' ? g.slice(n.sharedLen) : g.slice(0, g.length - n.sharedLen);
       for (const part of spansOf(offset)) shownParts.add(part);
     }
-    if (list.length > SHOW || omitted) out.push('  …(more via neighboursOf)');
+    if (items.length > SHOW || omitted) out.push('  …(more via neighboursOf)');
   };
   printGroup('Related words sharing its leading symbols:', c.neighbours.sharedStart, 'start', c.neighbours.omitted.sharedStart);
   printGroup('Related words sharing its trailing symbols:', c.neighbours.sharedEnd, 'end', c.neighbours.omitted.sharedEnd);
