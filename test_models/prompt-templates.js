@@ -12,17 +12,40 @@
 
 export default [
   {
-    name: 'subwords-v1',
+    name: "simple",
     build: (context) => {
       const parts = context.subwords
-        .flatMap((s) => s.helpers.map((h) => h.gloss))
-        .join(', ');
-      const lines = [
-        'Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a numbered list.',
-        `Word: ${context.spelling}  (${context.charCount} symbols)`,
+        .flatMap((s) => `  ${s.spelling} = ${s.helpers.map(h => h.gloss).join("; ")}`);
+      const out = [
+        "Interpret this Blissymbolics word composed by Blissymbolics characters. Reply with your 5 best English guesses, best first, as a JSON array.",
+        `Word: ${context.spelling}`,
       ];
-      if (parts) lines.push(`Parts: ${parts}`);
-      return lines.join('\n');
+      if (parts) out.push(`Characters: ${parts}`);
+      return out.join("\n");
+    },
+  },
+  {
+    name: "narrative",
+    build: (context) => {
+      const out = [];
+      out.push("Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.");
+      out.push(`Word: ${context.spelling}  (${context.charCount} symbols)`);
+      if (context.subwords.length) {
+        out.push("\nParts of it that are words themselves:");
+        for (const s of context.subwords) {
+          out.push(`  ${s.spelling} = ${s.helpers.map(h => h.gloss).join("; ")}`);
+        }
+      }
+      const related = context.neighbours.sharedStart.concat(context.neighbours.sharedEnd);
+      if (related.length) {
+        out.push("\nRelated words that share symbols with it:");
+        for (const n of related) out.push(`  ${n.spelling} = ${n.gloss}`);
+      }
+      if (context.legend.length) {
+        out.push("\nWhat the other symbols in those related words mean:");
+        for (const p of context.legend.slice(0, 10)) out.push(`  ${p.spelling} = ${p.gloss}`);
+      }
+      return out.join("\n");
     },
   },
 ];
