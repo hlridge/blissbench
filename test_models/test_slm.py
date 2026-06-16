@@ -29,12 +29,24 @@ import torch
 def extract_candidates(text: str, n: int = 5) -> list:
     """Extract up to n candidate glosses from raw model response text.
 
-    Primary strategy: parse a numbered list (1. word / 1) word).
-    Fallback: first n non-empty lines.
+    Strategy 1 (primary): parse a JSON array found anywhere in the text.
+    Strategy 2 (fallback): parse a numbered list (1. word / 1) word).
+    Strategy 3 (final fallback): first n non-empty lines.
     """
+    for m in re.finditer(r'\[[\s\S]*?\]', text):
+        try:
+            parsed = json.loads(m.group())
+            if isinstance(parsed, list):
+                strings = [s for s in parsed if isinstance(s, str)]
+                if strings:
+                    return strings[:n]
+        except (ValueError, TypeError):
+            continue
+
     numbered = re.findall(r'^\s*\d+[.)]\s*(.+)$', text, re.MULTILINE)
     if numbered:
         return [c.strip() for c in numbered[:n]]
+
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return lines[:n]
 
