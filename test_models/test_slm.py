@@ -22,6 +22,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
@@ -87,8 +88,9 @@ def generate_response(model, tokenizer, prompt: str) -> str:
         [
             {"role": "system", "content": "You are a helpful assistant for solving linguistic puzzles."},
             {"role": "user", "content": prompt},
-        ], 
-        add_generation_prompt=True
+        ],
+        add_generation_prompt=True,
+        tokenize=False,
     )
     inputs = tokenizer(text=text, return_tensors="pt").to(model.device)
     input_len = inputs["input_ids"].shape[-1]
@@ -100,6 +102,7 @@ def generate_response(model, tokenizer, prompt: str) -> str:
     return response
 
 def main():
+    start_time = time.perf_counter()
     parser = argparse.ArgumentParser(
         description="Run a local HuggingFace SLM against a blissbench prompt file."
     )
@@ -154,8 +157,14 @@ def main():
             count += 1
             print(f"[{count}] {target_id}: {candidates[:2]}", file=sys.stderr)
 
+    end_time = time.perf_counter()
+    total_seconds = end_time - start_time
+
+    minutes, seconds = divmod(total_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
     print(f"\nDone. Wrote {count} rows to {output_path}", file=sys.stderr)
     print(f"Score: node bin/score.js --submission {output_path} --set 50", file=sys.stderr)
+    print(f"Total time: {int(hours)}h {int(minutes)}m {seconds:.2f}s", file=sys.stderr)
 
 
 if __name__ == "__main__":

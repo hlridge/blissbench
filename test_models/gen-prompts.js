@@ -40,6 +40,8 @@ export function buildPromptRows(templates, targets, dataset) {
     const rows = [];
     for (const target of targets) {
       const context = dataset.buildContext(target.targetId);
+      console.log("context for", target.targetId, ":\n", context);
+      break;
       // Add indicator info to the context
       if (context.indicators.length > 0) {
         context.charCount += context.indicators.length;  // treat indicators as extra symbols
@@ -53,10 +55,6 @@ export function buildPromptRows(templates, targets, dataset) {
       }
       
       rows.push({ targetId: target.targetId, prompt: tmpl.build(context) });
-      if (target.targetId === "B1195") {
-        console.log(context);
-        break;
-      }
     }
     result.set(tmpl.name, rows);
   }
