@@ -40,7 +40,7 @@ def extract_candidates(text: str, n: int = 5) -> list:
                 strings = [s for s in parsed if isinstance(s, str)]
                 if strings:
                     return strings[:n]
-        except (ValueError, TypeError):
+        except ValueError:
             continue
 
     numbered = re.findall(r'^\s*\d+[.)]\s*(.+)$', text, re.MULTILINE)
