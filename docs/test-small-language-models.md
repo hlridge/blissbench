@@ -13,6 +13,16 @@ pip install transformers accelerate
 pip install bitsandbytes   # only needed for --quantize (Alliance / low-VRAM)
 ```
 
+**Node deps** — install before running `test_ollama.js`:
+```bash
+npm install
+```
+
+**Ollama** — only needed for the Ollama alternative in Step 3:
+- Install Ollama: https://ollama.com
+- Start the server: `ollama serve`
+- Pull a model: `ollama pull llama3.1`
+
 ## Step 1 — Edit prompt templates
 
 Open `test_models/prompt-templates.js`. Each entry in the array is a template:
@@ -123,6 +133,33 @@ python ~/blissbench/test_models/run_slm.py \
   --prompt-version subwords-v1 \
   --quantize
 ```
+
+## Step 3 (alternative) — Run via Ollama
+
+Use a local Ollama model instead of a HuggingFace checkpoint. Requires Ollama installed and running (`ollama serve`) with the target model already pulled (`ollama pull <model>`).
+
+```bash
+node test_models/test_ollama.js \
+  --model llama3.1 \
+  --prompts test_models/prompts/simple.jsonl \
+  --output test_models/results/simple-ollama.jsonl \
+  --runner my-model-name \
+  --prompt-version simple
+```
+
+Arguments:
+
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--model` | yes | — | Ollama model tag (e.g. `llama3.1`) |
+| `--prompts` | yes | — | Prompt JSONL from Step 2 |
+| `--output` | yes | — | Where to write the submission JSONL |
+| `--runner` | no | model tag | Label in every output row |
+| `--prompt-version` | no | prompts file stem | Label in every output row |
+
+Responses are written immediately after each target — the output file is usable even if the run is interrupted. The script prints elapsed time and a score command when complete.
+
+Proceed to Step 4 to score the output.
 
 ## Step 4 — Score
 
