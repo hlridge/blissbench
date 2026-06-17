@@ -49,7 +49,7 @@ export default [
     },
   },
   {
-    name: "json_structured",
+    name: "json",
     systemPrompt: `You interpret one Blissymbolics word into ranked natural-language candidates.
 
 Input is a single Bliss word as a flat array of BCI-AV symbol IDs. The word may flatten multiple sub-words;
@@ -130,7 +130,7 @@ Return ONLY a JSON array of 5 candidate words or phrases, best-first. No prose, 
         }));
       }
 
-      return JSON.stringify(payload, null, 2) + "\n\nReturn JSON array of candidate interpretations.";
+      return JSON.stringify(payload, null, 2) + "\n\nReturn JSON array of 5 candidate interpretations.";
     },
   },
 ];
