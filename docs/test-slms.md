@@ -31,12 +31,17 @@ Open `test_models/prompt-templates.js`. Each entry in the array is a template:
 export default [
   {
     name: 'subwords-v1',          // becomes the output filename
+    systemPrompt: '...',          // optional; one system prompt for all records in this template
     build: (context) => {         // context = kit.dataset.buildContext(targetId)
       // ...build and return a prompt string
     },
   },
 ];
 ```
+
+When `systemPrompt` is present, `gen-prompts.js` writes it once as a metadata header in the
+generated JSONL (see Step 2). Both runners read it automatically. Omit the field to use the
+default: `"You are a helpful assistant for solving linguistic puzzles."`.
 
 `context` fields available (never exposes the target's own gloss — those are sealed):
 
@@ -52,6 +57,10 @@ export default [
 | `neighbours.sharedStart[]` | objects | Words sharing leading glyph run |
 | `neighbours.sharedEnd[]` | objects | Words sharing trailing glyph run |
 | `legend[]` | objects | Glosses for non-shared parts in neighbour spellings |
+| `indicators[].purpose` | `string` | Curated grammatical meaning of the indicator |
+| `modifiers[].codes` | `string[]` | B-code IDs of the modifier symbols |
+| `modifiers[].gloss` | `string` | Dictionary gloss of the modifier |
+| `subwords[].helpers[].explanation` | `string` | Dictionary explanation for that subword |
 
 See `examples/build-method.example.js` for a worked example.
 
@@ -63,11 +72,17 @@ node test_models/gen-prompts.js
 npm run gen-prompts
 ```
 
-This writes one JSONL file per template to `test_models/prompts/`:
+This writes one JSONL file per template to `test_models/prompts/`. When the template has a
+`systemPrompt`, the first line is a metadata header; the remaining lines are prompt rows:
 
 ```
-test_models/prompts/subwords-v1.jsonl   # 4186 rows: {"targetId":"B…","prompt":"…"}
+{"_meta":true,"systemPrompt":"You interpret one Blissymbolics word..."}
+{"targetId":"B…","prompt":"…"}
+{"targetId":"B…","prompt":"…"}
 ```
+
+Templates without `systemPrompt` produce JSONL with no header line (the runners fall back to
+the default system prompt).
 
 To use a custom templates file or output directory:
 
@@ -160,6 +175,14 @@ Arguments:
 Responses are written immediately after each target — the output file is usable even if the run is interrupted. The script prints elapsed time and a score command when complete.
 
 Proceed to Step 4 to score the output.
+
+## Available templates
+
+| Name | Description |
+| ---- | ----------- |
+| `simple` | Short user prompt: spelling + character glosses. No system prompt override. |
+| `narrative` | User prompt with subwords, related words, and legend. No system prompt override. |
+| `json_structured` | Structured JSON user prompt: `inputIds`, `annotations`, `indicatorEffects`, `subwordMatches`. Includes a detailed Blissymbolics interpretation system prompt. |
 
 ## Step 4 — Score
 
