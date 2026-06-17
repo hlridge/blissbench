@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractCandidates } from '../test_models/test_ollama.js';
+import { extractCandidates, readSystemPrompt } from '../test_models/test_ollama.js';
 
 // --- JSON array (primary strategy) ---
 
@@ -90,4 +90,33 @@ test('fewer than n if model gave less', () => {
     extractCandidates('1. apple\n2. pear'),
     ['apple', 'pear'],
   );
+});
+
+const FALLBACK = 'default system prompt';
+
+test('readSystemPrompt: _meta line → extracts systemPrompt, rest returned as dataLines', () => {
+  const meta = JSON.stringify({ _meta: true, systemPrompt: 'custom prompt' });
+  const data = JSON.stringify({ targetId: 'B1', prompt: 'hi' });
+  const { systemPrompt, dataLines } = readSystemPrompt([meta, data], FALLBACK);
+  assert.equal(systemPrompt, 'custom prompt');
+  assert.deepEqual(dataLines, [data]);
+});
+
+test('readSystemPrompt: no _meta line → fallback used, all lines returned', () => {
+  const data = JSON.stringify({ targetId: 'B1', prompt: 'hi' });
+  const { systemPrompt, dataLines } = readSystemPrompt([data], FALLBACK);
+  assert.equal(systemPrompt, FALLBACK);
+  assert.deepEqual(dataLines, [data]);
+});
+
+test('readSystemPrompt: empty input → fallback, empty dataLines', () => {
+  const { systemPrompt, dataLines } = readSystemPrompt([], FALLBACK);
+  assert.equal(systemPrompt, FALLBACK);
+  assert.deepEqual(dataLines, []);
+});
+
+test('readSystemPrompt: non-JSON first line → fallback, all lines returned', () => {
+  const { systemPrompt, dataLines } = readSystemPrompt(['not json', 'more'], FALLBACK);
+  assert.equal(systemPrompt, FALLBACK);
+  assert.deepEqual(dataLines, ['not json', 'more']);
 });

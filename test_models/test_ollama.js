@@ -54,7 +54,19 @@ export function extractCandidates(text, n = 5) {
   return text.split("\n").map(l => l.trim()).filter(Boolean).slice(0, n);
 }
 
-const SYSTEM_PROMPT = "You are a helpful assistant for solving linguistic puzzles.";
+const SYSTEM_PROMPT_FALLBACK = "You are a helpful assistant for solving linguistic puzzles.";
+
+export function readSystemPrompt(lines, fallback) {
+  if (lines.length > 0) {
+    try {
+      const first = JSON.parse(lines[0]);
+      if (first._meta === true && typeof first.systemPrompt === 'string') {
+        return { systemPrompt: first.systemPrompt, dataLines: lines.slice(1) };
+      }
+    } catch { /* not JSON */ }
+  }
+  return { systemPrompt: fallback, dataLines: lines };
+}
 
 async function main() {
   const model = arg("model", null);
@@ -72,7 +84,8 @@ async function main() {
   const runner = arg("runner", model);
   const promptVersion = arg("prompt-version", basename(promptsPath, extname(promptsPath)));
 
-  const lines = readFileSync(resolve(promptsPath), "utf8").split("\n").filter(Boolean);
+  const rawLines = readFileSync(resolve(promptsPath), "utf8").split("\n").filter(Boolean);
+  const { systemPrompt, dataLines: lines } = readSystemPrompt(rawLines, SYSTEM_PROMPT_FALLBACK);
   const outPath = resolve(outputPath);
 
   mkdirSync(dirname(outPath), { recursive: true });
@@ -87,7 +100,7 @@ async function main() {
     const response = await ollama.chat({
       model,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
       options: { num_predict: 1024 },
