@@ -24,8 +24,20 @@ import re
 import sys
 import time
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-import torch
+SYSTEM_PROMPT_FALLBACK = "You are a helpful assistant for solving linguistic puzzles."
+
+
+def read_system_prompt(lines, fallback):
+    """Return (system_prompt, data_lines): extract _meta header if present."""
+    if lines:
+        try:
+            first = json.loads(lines[0])
+            if first.get('_meta') is True and isinstance(first.get('systemPrompt'), str):
+                return first['systemPrompt'], lines[1:]
+        except (json.JSONDecodeError, ValueError):
+            pass
+    return fallback, lines
+
 
 def extract_candidates(text: str, n: int = 5) -> list:
     """Extract up to n candidate glosses from raw model response text.
@@ -54,6 +66,9 @@ def extract_candidates(text: str, n: int = 5) -> list:
 
 def load_model(model_path: str, quantize: bool):
     """Load tokenizer and model from a local HuggingFace checkpoint."""
+    from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+    import torch
+
     print("Loading tokenizer from path: ", model_path)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
@@ -81,12 +96,11 @@ def load_model(model_path: str, quantize: bool):
     return model, tokenizer
 
 
-def generate_response(model, tokenizer, prompt: str) -> str:
+def generate_response(model, tokenizer, prompt: str, system_prompt: str) -> str:
     """Tokenize prompt, generate until the model's natural stop, decode new tokens only."""
-    # Process input
     text = tokenizer.apply_chat_template(
         [
-            {"role": "system", "content": "You are a helpful assistant for solving linguistic puzzles."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
         add_generation_prompt=True,
@@ -127,21 +141,22 @@ def main():
     model, tokenizer = load_model(args.model, args.quantize)
     print("Model loaded.", file=sys.stderr)
 
+    with open(args.prompts, encoding="utf-8") as f_in:
+        all_lines = [line.strip() for line in f_in if line.strip()]
+
+    system_prompt, data_lines = read_system_prompt(all_lines, SYSTEM_PROMPT_FALLBACK)
+
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     count = 0
-    with open(args.prompts, encoding="utf-8") as f_in, \
-         open(output_path, "w", encoding="utf-8") as f_out:
-        for line in f_in:
-            line = line.strip()
-            if not line:
-                continue
+    with open(output_path, "w", encoding="utf-8") as f_out:
+        for line in data_lines:
             row = json.loads(line)
             target_id = row["targetId"]
             prompt = row["prompt"]
 
-            raw = generate_response(model, tokenizer, prompt)
+            raw = generate_response(model, tokenizer, prompt, system_prompt)
             candidates = extract_candidates(raw)
 
             out_row = {
@@ -152,7 +167,7 @@ def main():
                 "promptVersion": prompt_version,
             }
             f_out.write(json.dumps(out_row) + "\n")
-            f_out.flush()  # crash-safe: each row persisted immediately
+            f_out.flush()
 
             count += 1
             print(f"[{count}] {target_id}: {candidates[:2]}", file=sys.stderr)

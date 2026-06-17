@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'test_models'))
 
-from test_slm import extract_candidates
+from test_slm import extract_candidates, read_system_prompt
 
 
 # --- JSON array (primary strategy) ---
@@ -81,6 +81,34 @@ def test_returns_fewer_than_n_if_model_gave_less():
     text = "1. apple\n2. pear"
     result = extract_candidates(text)
     assert result == ["apple", "pear"], result
+
+
+FALLBACK = "default system prompt"
+
+def test_read_system_prompt_with_meta():
+    import json
+    meta = json.dumps({"_meta": True, "systemPrompt": "custom prompt"})
+    data = json.dumps({"targetId": "B1", "prompt": "hi"})
+    system_prompt, data_lines = read_system_prompt([meta, data], FALLBACK)
+    assert system_prompt == "custom prompt", system_prompt
+    assert data_lines == [data], data_lines
+
+def test_read_system_prompt_no_meta():
+    import json
+    data = json.dumps({"targetId": "B1", "prompt": "hi"})
+    system_prompt, data_lines = read_system_prompt([data], FALLBACK)
+    assert system_prompt == FALLBACK, system_prompt
+    assert data_lines == [data], data_lines
+
+def test_read_system_prompt_empty():
+    system_prompt, data_lines = read_system_prompt([], FALLBACK)
+    assert system_prompt == FALLBACK, system_prompt
+    assert data_lines == [], data_lines
+
+def test_read_system_prompt_non_json():
+    system_prompt, data_lines = read_system_prompt(["not json", "more"], FALLBACK)
+    assert system_prompt == FALLBACK, system_prompt
+    assert data_lines == ["not json", "more"], data_lines
 
 
 if __name__ == "__main__":
