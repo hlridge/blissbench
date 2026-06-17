@@ -22,8 +22,9 @@
 
 const BCODE_TOKEN_RE = /^B\d+$/i;
 
-// The only two indicators that are TRUE character-level sense markers
-// (concrete/thing vs. abstract). Everything else after ';' is word-level.
+// The two indicators that flip a glyph's SENSE: concrete/thing (B97) vs. abstract (B6436).
+// (All ';'-attached indicators are character-level; only ';;' marks word-level — see
+// parseCharacter. These two are named just for the concrete/abstract concept, not to gate scope.)
 const TRUE_CHARACTER_INDICATOR_CODES = new Set(['B6436', 'B97']);
 
 const unique = (values) => [...new Set(values.filter(Boolean))];
@@ -76,21 +77,18 @@ const parseCharacter = (value, index) => {
   }
 
   const [base, ...indicatorParts] = parts;
+  // Every single-';' indicator is a diacritic on THIS character and stays attached to it
+  // (e.g. "B655;B97" = the concrete reading of B655). Scope is decided by the notation —
+  // ';' character-level vs ';;' word-level (parseBCodeWord) — not by the indicator code, so
+  // B97/B6436 are no longer special-cased and a char-level indicator is never hoisted away.
   const indicators = parseIndicatorTokens(indicatorParts.join(';'));
-  const characterIndicators = indicators.filter((indicator) =>
-    TRUE_CHARACTER_INDICATOR_CODES.has(indicator)
-  );
-  const wordLevelIndicators = indicators.filter(
-    (indicator) => !TRUE_CHARACTER_INDICATOR_CODES.has(indicator)
-  );
   const baseSpelling = normalizeBCodeToken(base);
 
   return {
     index,
     baseSpelling,
-    spelling: composeCharacterSpelling(baseSpelling, characterIndicators),
-    indicators: characterIndicators,
-    wordLevelIndicators
+    spelling: composeCharacterSpelling(baseSpelling, indicators),
+    indicators
   };
 };
 
@@ -112,12 +110,12 @@ export const parseBCodeWord = (spelling) => {
   }
 
   const characters = characterParts.map(parseCharacter);
+  // Word-level indicators come ONLY from a double ';;'. Single-';' indicators stay attached
+  // to their character (parseCharacter); they are no longer hoisted to word level.
   const wordIndicators = parseIndicatorTokens(wordIndicatorPart);
-  const movedWordIndicators = characters.flatMap((character) => character.wordLevelIndicators);
-  const allWordIndicators = unique([...movedWordIndicators, ...wordIndicators]);
   const bodySpelling = characters.map((character) => character.spelling).join('/');
-  const canonicalSpelling = allWordIndicators.length > 0
-    ? `${bodySpelling};;${allWordIndicators.join(';')}`
+  const canonicalSpelling = wordIndicators.length > 0
+    ? `${bodySpelling};;${wordIndicators.join(';')}`
     : bodySpelling;
   const characterIndicators = characters.flatMap((character) =>
     character.indicators.map((indicator) => ({
@@ -133,7 +131,7 @@ export const parseBCodeWord = (spelling) => {
     characters,
     indicators: [
       ...characterIndicators,
-      ...allWordIndicators.map((indicator) => ({
+      ...wordIndicators.map((indicator) => ({
         spelling: indicator,
         scope: 'whole word'
       }))

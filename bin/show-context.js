@@ -24,6 +24,10 @@ const flag = (name) => {
 const asJson = argv.includes('--json');
 const target = flag('target') || argv.find((a) => !a.startsWith('--'));
 
+// A word's own indicators, compactly, for appending to a helper line.
+const inds = (xs) =>
+  xs && xs.length ? `  ⟨${xs.map((i) => `${i.spelling} ${i.name.replace(/^INDICATOR /, '')}`).join('; ')}⟩` : '';
+
 const main = async () => {
   if (!target) throw new Error('Usage: node bin/show-context.js <targetId|code> [--json]');
   const kit = await loadKit();
@@ -73,19 +77,19 @@ const main = async () => {
   for (const s of ctx.subwords) {
     console.log(`  ${s.spelling}`);
     for (const h of s.helpers) {
-      console.log(`     ↳ ${h.id} (${h.pos || '-'}) "${h.gloss}"`);
+      console.log(`     ↳ ${h.notation.padEnd(16)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
     }
   }
 
   console.log(`\nSiblings: same glyphs, different indicators (${ctx.siblings.length}):`);
   for (const h of ctx.siblings) {
-    console.log(`  ${h.id} (${h.pos || '-'}) "${h.gloss}"`);
+    console.log(`  ${h.notation.padEnd(20)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
   }
 
   const nb = ctx.neighbours;
   const moreOf = (group) => (nb.omitted[group] ? ` (+${nb.omitted[group]} more via neighboursOf)` : '');
   const showNeighbour = (h) =>
-    console.log(`     ↳ ${h.spelling.padEnd(20)} [share ${h.sharedLen}: ${h.sharedSpelling}]  (${h.pos || '-'}) "${h.gloss}"`);
+    console.log(`     ↳ ${h.spelling.padEnd(20)} [share ${h.sharedLen}: ${h.sharedSpelling}]  (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
   console.log('\nNeighbours: shared-affix words (deepest-shared first):');
   console.log(`  shared start: same leading glyph(s) (${nb.sharedStart.length})${moreOf('sharedStart')}:`);
   nb.sharedStart.forEach(showNeighbour);

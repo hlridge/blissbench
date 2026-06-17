@@ -201,62 +201,98 @@ prompts from those methods, not from `getEntry` / `answerKeyOf` / `derivationOf`
 
 The "middle" is the part you own: take what `buildContext` hands you and turn it into a prompt.
 There is no required shape — you pick which hints to use and how to phrase them.
-`examples/build-method.example.js` (`npm run method`) is the smallest honest version: a two-line
-task, then it concatenates *some* of the hints (and skips the rest on purpose).
+`examples/build-method.example.js` (`npm run method`) is a small honest version: a two-line task,
+then it renders the word's own indicators and a selection of the helper hints. Rendering
+`ctx.indicators` / `ctx.modifiers` (and each helper's own `indicators`) verbatim is the clean
+default — they arrive already scoped to each word; the craft is in *how* you use them.
 
 ```js
+// examples/build-method.example.js (npm run method), abridged: the file adds two small
+// helpers (a glyph-span splitter, and a dedupe that merges repeated codes onto one line).
 const buildPrompt = (c) => {
   const out = [];
   out.push('Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.');
-  out.push(`Word: ${c.spelling}  (${c.charCount} symbols)`);
+  out.push(`Word: ${c.spelling}  (${c.charCount} characters)`);
+
+  // The word's OWN indicators/modifiers. buildContext scopes them to the target, so
+  // rendering them verbatim is the clean default; the craft is in HOW you use them.
+  if (c.indicators.length) {
+    out.push('\nGrammar markers on this word:');
+    for (const i of c.indicators) out.push(`  ${i.spelling} = ${i.purpose || i.name}`);
+  }
+  // (c.modifiers — pre-head operators — render the same way when the word has them.)
+
   if (c.subwords.length) {
     out.push('\nParts of it that are themselves words:');
-    for (const s of c.subwords) out.push(`  ${s.spelling} = ${s.helpers.map(h => h.gloss).join('; ')}`);
+    for (const s of c.subwords) out.push(`  ${s.spelling} = ${s.helpers.slice(0, 2).map(h => h.gloss).join('; ')}`);
   }
-  const related = c.neighbours.sharedStart.concat(c.neighbours.sharedEnd).slice(0, 6);
-  if (related.length) {
-    out.push('\nRelated words that share symbols with it:');
-    for (const n of related) out.push(`  ${n.spelling} = ${n.gloss}`);
-  }
-  if (c.legend.length) {
+
+  // Show BOTH neighbour groups, and remember the non-shared symbols of the ones we print
+  // (shownParts) so the glossary can be limited to exactly those related words.
+  const shownParts = new Set();
+  const printGroup = (label, items, side, omitted) => { /* dedupe, print ≤4, fill shownParts */ };
+  printGroup('Related words sharing its leading symbols:', c.neighbours.sharedStart, 'start', c.neighbours.omitted.sharedStart);
+  printGroup('Related words sharing its trailing symbols:', c.neighbours.sharedEnd, 'end', c.neighbours.omitted.sharedEnd);
+
+  // c.legend decodes ALL neighbours' non-shared symbols; filter to the ones we showed so
+  // the glossary matches the related words above (an earlier version leaked unrelated codes).
+  const glossary = c.legend.filter(p => shownParts.has(p.spelling));
+  if (glossary.length) {
     out.push('\nWhat the other symbols in those related words mean:');
-    for (const p of c.legend.slice(0, 10)) out.push(`  ${p.spelling} = ${p.gloss}`);
+    for (const p of glossary.slice(0, 8)) out.push(`  ${p.spelling} = ${p.gloss}`);
   }
   return out.join('\n');               // ← send this string to your model
 };
 ```
 
 Run it and you see the **materialized** prompt — exactly what those variables expand to, for
-`B1175` (`B426/B643`):
+`B1181` (`B313;B86/B271/B1042`, "afraid"):
 
 ```text
 Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.
-Word: B426/B643  (2 symbols)
+Word: B313;B86/B271/B1042  (3 characters)
+
+Grammar markers on this word:
+  B86 = Marks as description (adjective/adverb)
 
 Parts of it that are themselves words:
-  B426 = limited time, interval, period, awhile, for a while; temporary
-  B643 = teenager, adolescent, youth
+  B313 = feeling, emotion, sensation; to feel (+1 more senses)
+  B313/B271 = sad, sadly, unhappily, unhappy; sadness, sorrow, unhappiness
+  B271 = down, downward; to descend, to go down
+  B1042 = future (uncertain)
 
-Related words that share symbols with it:
-  B426/B562 = rest period, break
-  B426/B412 = lesson, lecture, class
-  B426/B420 = long time
-  …
+Related words sharing its leading symbols:
+  B313/B271/B1042/B401 = terrified; terror, panic
+  B313/B271/B1042/B952 = fear of heights, acrophobia
+  B313/B271/B102 = too bad, I'm sorry, I'm so sorry
+  B313/B271/B634 = to mourn; mourning, grief
+  …(more via neighboursOf)
+
+Related words sharing its trailing symbols:
+  B838/B313/B271/B1042 = Sniff
+  B223/B1042 = chance, risk
+  B313/B723/B1042 = anxiety; anxious, anxiously
+  B313/B678/B1042 = to hope; hope; hopeful
 
 What the other symbols in those related words mean:
-  B392/B106 = activity centre
-  B412/B719 = sport (class)
-  B106 = activity, male gender (in combinations)
-  B392 = house, building, dwelling, residence
-  …
+  B313/B678 = to enjoy; happiness, fun, joy, pleasure; happy, glad, gladly, happily
+  B313/B723 = upset; upset, disturbance, agitation
+  B102 = about, concerning, regarding, in relation to, of, on
+  B223 = choice, selection, election; to choose, to pick, to select
+  B401 = intensity
+  B634 = subtraction, loss; to subtract, to remove, to take away; linear thing (horizontal), bar
+  B678 = up, upward; to rise, to ascend, to go up
+  B723 = up and down; to shake, to jiggle
+  …(+2 more)
 ```
 
-That is the whole idea: the codes arrive as evidence (`B426 = period`, `B643 = youth`), the
-`legend` decodes the symbols *inside* the related words, and a reader needs no prior Bliss to
-follow it. This is **one** example, not part of the frozen contract — change the task line, use
-more or fewer hints, add the modifier/indicator readings, lay it out differently. Swap the final
-`return`/`console.log` for your API call and you have a pipeline; wire it into the submission loop
-in the next section.
+That is the whole idea: the codes arrive as evidence (`B313/B271` = *sad*, `B1042` = *future
+(uncertain)*, the `B86` description marker), the `legend` decodes the symbols *inside* the related
+words it shows, and a reader needs no prior Bliss to follow it. This is **one** example, not part
+of the frozen contract — change the task line, use more or fewer hints (siblings, the `explanation`,
+the raw `answers`, and each helper's own `indicators` are untouched here), lay it out differently.
+Swap the final `return`/`console.log` for your API call and you have a pipeline; wire it into the
+submission loop in the next section.
 
 ## Run a set and score it
 
