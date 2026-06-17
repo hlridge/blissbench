@@ -40,25 +40,28 @@ export function buildPromptRows(templates, targets, dataset) {
     const rows = [];
     for (const target of targets) {
       const context = dataset.buildContext(target.targetId);
-      console.log("context for", target.targetId, ":\n", context);
-      break;
-      // Add indicator info to the context
-      if (context.indicators.length > 0) {
-        context.charCount += context.indicators.length;  // treat indicators as extra symbols
-        context.indicators.forEach(i => context.subwords.push(...context.indicators.map(i => ({
-          spelling: i.spelling,
-          helpers: [{
-            id: i.id,
-            gloss: i.purpose,
-          }]
-        }))));
-      }
-      
       rows.push({ targetId: target.targetId, prompt: tmpl.build(context) });
     }
     result.set(tmpl.name, rows);
   }
   return result;
+}
+
+/**
+ * Serialise rows to JSONL, prepending a _meta line when systemPrompt is provided.
+ * @param {Array<{targetId: string, prompt: string}>} rows
+ * @param {string} [systemPrompt]
+ * @returns {string}
+ */
+export function buildFileContent(rows, systemPrompt) {
+  const lines = [];
+  if (systemPrompt) {
+    lines.push(JSON.stringify({ _meta: true, systemPrompt }));
+  }
+  for (const row of rows) {
+    lines.push(JSON.stringify(row));
+  }
+  return lines.join('\n') + '\n';
 }
 
 const main = async () => {
@@ -83,8 +86,9 @@ const main = async () => {
 
   mkdirSync(outputDir, { recursive: true });
   for (const [name, rows] of promptMap) {
+    const tmpl = templates.find(t => t.name === name);
     const outPath = resolve(outputDir, `${name}.jsonl`);
-    writeFileSync(outPath, rows.map((r) => JSON.stringify(r)).join("\n") + "\n", "utf8");
+    writeFileSync(outPath, buildFileContent(rows, tmpl?.systemPrompt), "utf8");
     process.stderr.write(`Wrote ${rows.length} rows → ${outPath}\n`);
   }
 };

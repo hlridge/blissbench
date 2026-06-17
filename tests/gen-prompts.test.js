@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPromptRows } from '../test_models/gen-prompts.js';
+import { buildPromptRows, buildFileContent } from '../test_models/gen-prompts.js';
 
 const mockDataset = {
   buildContext: (targetId) => ({
@@ -50,4 +50,25 @@ test('each row has targetId and prompt fields', () => {
 test('prompt is produced by calling template.build with context', () => {
   const result = buildPromptRows(mockTemplates, mockTargets, mockDataset);
   assert.equal(result.get('tmpl-b')[1].prompt, 'prompt-b:SPELL_B0002');
+});
+
+test('buildFileContent: no systemPrompt produces plain JSONL', () => {
+  const rows = [{ targetId: 'B1', prompt: 'hello' }];
+  const result = buildFileContent(rows);
+  assert.equal(result, '{"targetId":"B1","prompt":"hello"}\n');
+});
+
+test('buildFileContent: with systemPrompt adds _meta line first', () => {
+  const rows = [{ targetId: 'B1', prompt: 'hello' }];
+  const result = buildFileContent(rows, 'My system prompt');
+  const lines = result.trim().split('\n');
+  assert.equal(lines.length, 2);
+  assert.deepEqual(JSON.parse(lines[0]), { _meta: true, systemPrompt: 'My system prompt' });
+  assert.deepEqual(JSON.parse(lines[1]), { targetId: 'B1', prompt: 'hello' });
+});
+
+test('buildFileContent: empty systemPrompt is falsy, no _meta line', () => {
+  const rows = [{ targetId: 'B1', prompt: 'hello' }];
+  const result = buildFileContent(rows, '');
+  assert.equal(result, '{"targetId":"B1","prompt":"hello"}\n');
 });
