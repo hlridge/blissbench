@@ -36,4 +36,4 @@ pip install torch==2.12.0 transformers==5.12.1 sentencepiece==0.2.1 accelerate==
 pip list
 
 echo "Test small language model with prompts: job ID $SLURM_JOB_ID on nodes $SLURM_JOB_NODELIST."
-python ~/test_slms/test_slm.py --model ~/projects/ctb-whkchun/s2_bliss_LLMs/gemma-4-E4B-it --prompts ~/test_slms/prompts/simple.jsonl --output ~/test_slms/results/gemma-4-E4B-it/simple.jsonl
+python ~/test_slms/test_slm.py --model ~/projects/ctb-whkchun/s2_bliss_LLMs/gemma-4-E4B-it --prompts ~/test_slms/prompts/json.jsonl --output ~/test_slms/results/gemma-4-E4B-it/json.jsonl
