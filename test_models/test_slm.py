@@ -46,6 +46,7 @@ def extract_candidates(text: str, n: int = 5) -> list:
     Strategy 2 (fallback): parse a numbered list (1. word / 1) word).
     Strategy 3 (final fallback): first n non-empty lines.
     """
+    text = re.sub(r'<analysis>[\s\S]*?</analysis>', '', text).strip()
     for m in re.finditer(r'\[[\s\S]*?\]', text):
         try:
             parsed = json.loads(m.group())
@@ -123,7 +124,7 @@ def main():
     parser.add_argument("--model", required=True,
                         help="Path to HuggingFace checkpoint directory")
     parser.add_argument("--prompts", required=True,
-                        help="Path to prompt JSONL (output of gen-prompts.js)")
+                        help="Path to prompt JSONL (output of gen_prompts.js)")
     parser.add_argument("--output", required=True,
                         help="Path to write submission JSONL")
     parser.add_argument("--runner", default=None,

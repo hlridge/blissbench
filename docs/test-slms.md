@@ -8,24 +8,27 @@ Two steps: generate prompt files locally (Node), then run them through your mode
 **Node.js** (≥18) — already required by blissbench.
 
 **Python deps** — install before running `run_slm.py`:
+
 ```
 pip install transformers accelerate
 pip install bitsandbytes   # only needed for --quantize (Alliance / low-VRAM)
 ```
 
 **Node deps** — install before running `test_ollama.js`:
+
 ```bash
 npm install
 ```
 
 **Ollama** — only needed for the Ollama alternative in Step 3:
-- Install Ollama: https://ollama.com
+
+- Install Ollama: <https://ollama.com>
 - Start the server: `ollama serve`
 - Pull a model: `ollama pull llama3.1`
 
 ## Step 1 — Edit prompt templates
 
-Open `test_models/prompt-templates.js`. Each entry in the array is a template:
+Open `test_models/prompt_templates.js`. Each entry in the array is a template:
 
 ```js
 export default [
@@ -39,7 +42,7 @@ export default [
 ];
 ```
 
-When `systemPrompt` is present, `gen-prompts.js` writes it once as a metadata header in the
+When `systemPrompt` is present, `gen_prompts.js` writes it once as a metadata header in the
 generated JSONL (see Step 2). Both runners read it automatically. Omit the field to use the
 default: `"You are a helpful assistant for solving linguistic puzzles."`.
 
@@ -67,15 +70,23 @@ See `examples/build-method.example.js` for a worked example.
 ## Step 2 — Generate prompt files
 
 ```bash
-node test_models/gen-prompts.js
-# or
-npm run gen-prompts
+node test_models/gen_prompts.js
+# or with options:
+node test_models/gen_prompts.js --set 50 --templates test_models/prompt_templates.js --output-dir test_models/prompts/
 ```
 
-This writes one JSONL file per template to `test_models/prompts/`. When the template has a
+Arguments:
+
+| Argument | Required | Default | Description |
+| -------- | -------- | ------- | ----------- |
+| `--set` | no | (all targets) | Name of a target set, e.g. `50`, `100`, `all` — loads from `data/sets/set-<name>.jsonl` |
+| `--templates` | no | `test_models/prompt_templates.js` | Path to a templates file |
+| `--output-dir` | no | `test_models/prompts/` | Directory to write output JSONL files |
+
+This writes one JSONL file per template to the output directory. When the template has a
 `systemPrompt`, the first line is a metadata header; the remaining lines are prompt rows:
 
-```
+```jsonl
 {"_meta":true,"systemPrompt":"You interpret one Blissymbolics word..."}
 {"targetId":"B…","prompt":"…"}
 {"targetId":"B…","prompt":"…"}
@@ -83,12 +94,6 @@ This writes one JSONL file per template to `test_models/prompts/`. When the temp
 
 Templates without `systemPrompt` produce JSONL with no header line (the runners fall back to
 the default system prompt).
-
-To use a custom templates file or output directory:
-
-```bash
-node test_models/gen-prompts.js --templates path/to/my-templates.js --output-dir test_models/prompts/
-```
 
 ## Step 3 — Run the SLM
 
@@ -182,7 +187,7 @@ Proceed to Step 4 to score the output.
 | ---- | ----------- |
 | `simple` | Short user prompt: spelling + character glosses. No system prompt override. |
 | `narrative` | User prompt with subwords, related words, and legend. No system prompt override. |
-| `json_structured` | Structured JSON user prompt: `inputIds`, `annotations`, `indicatorEffects`, `subwordMatches`. Includes a detailed Blissymbolics interpretation system prompt. |
+| `json` | Structured JSON user prompt: `inputIds`, `annotations`, `indicatorEffects`, `subwordMatches`. Includes a detailed Blissymbolics interpretation system prompt. |
 
 ## Step 4 — Score
 

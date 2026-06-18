@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 /*
- * gen-prompts.js — generate per-template prompt JSONL files for SLM testing.
+ * gen_prompts.js — generate per-template prompt JSONL files for SLM testing.
  *
  * Usage:
- *   node test_models/gen-prompts.js [--templates <path>] [--output-dir <path>]
- *   npm run gen-prompts -- --templates test_models/prompt-templates.js --output-dir test_models/prompts/
+ *   node test_models/gen_prompts.js [--set <name>] [--templates <path>] [--output-dir <path>]
+ *   npm run gen_prompts -- --set 50 --templates test_models/prompt_templates.js --output-dir test_models/prompts/
  *
  * Defaults:
- *   --templates   test_models/prompt-templates.js
+ *   --set         (all eligible targets)
+ *   --templates   test_models/prompt_templates.js
  *   --output-dir  test_models/prompts/
  *
  * Output: one <name>.jsonl per template, each line: {"targetId":"B1234","prompt":"..."}
  * Overwrites existing files (idempotent). Progress written to stderr.
  */
-import { writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadKit } from "../src/index.js";
@@ -41,6 +42,9 @@ export function buildPromptRows(templates, targets, dataset) {
     for (const target of targets) {
       const context = dataset.buildContext(target.targetId);
       rows.push({ targetId: target.targetId, prompt: tmpl.build(context) });
+      // if (context.indicators.length > 0 && context.modifiers.length > 0) {
+      //   break;
+      // }
     }
     result.set(tmpl.name, rows);
   }
@@ -68,7 +72,7 @@ const main = async () => {
   const templatesPath = resolve(
     __dirname,
     "..", // project root
-    arg("templates", "test_models/prompt-templates.js")
+    arg("templates", "test_models/prompt_templates.js")
   );
   const outputDir = resolve(
     __dirname,
@@ -76,11 +80,21 @@ const main = async () => {
     arg("output-dir", "test_models/prompts/")
   );
 
+  const setName = arg("set", null);
+
   const { default: templates } = await import(templatesPath);
   const kit = await loadKit();
-  const targets = kit.dataset.getEligibleTargets();
+  let targets = kit.dataset.getEligibleTargets();
 
-  process.stderr.write(`Loaded ${targets.length} targets, ${templates.length} template(s)\n`);
+  if (setName !== null) {
+    const setPath = resolve(__dirname, "..", `data/sets/set-${setName}.jsonl`);
+    const ids = readFileSync(setPath, "utf8").trim().split(/\r?\n/).map((l) => JSON.parse(l).targetId);
+    const byId = new Map(targets.map((t) => [t.targetId, t]));
+    targets = ids.map((id) => byId.get(id)).filter(Boolean);
+  }
+
+  const setLabel = setName !== null ? ` (set-${setName})` : "";
+  process.stderr.write(`Loaded ${targets.length} targets${setLabel}, ${templates.length} template(s)\n`);
 
   const promptMap = buildPromptRows(templates, targets, kit.dataset);
 
