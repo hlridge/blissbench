@@ -2,17 +2,15 @@
 
 ## Simple
 
-Interpret this Blissymbolics word composed by Blissymbolics characters. Reply with your 5 best English guesses, best first, as a JSON array.
-Word: B894;B86/B10
+Interpret this symbolic word composed of following characters:
+A character meaning "language"
+A character meaning "electricity, electric, electrical"
 
-Characters:
-  B894 = being (state of); to be, to am, to are, to is, to exist; organism
-  B10 = one (digit), 1, modifier (first person); unit, example, sample, for example, e.g.
-  B86 = Marks as description (adjective/adverb)
+Reply with your 5 best English guesses, best first, as a JSON array.
 
 ## Narrative
 
-Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.
+Interpret this symbolic word. Reply with your 5 best English guesses, best first, as a JSON array.
 Word: B894;B86/B10  (3 symbols)
 
 Parts of it that are words themselves:

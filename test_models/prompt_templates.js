@@ -14,15 +14,22 @@ export default [
   {
     name: "simple",
     build: (context) => {
-      const parts = [
-        ...context.subwords.flatMap((s) => `  ${s.spelling} = ${s.helpers.map(h => h.gloss).join("; ")}`),
-        ...context.indicators.flatMap((i) => `  ${i.spelling} = ${i.purpose || i.name}`)
-      ];
+      const indicators =context.indicators.flatMap((i) => `  ${i.spelling} = ${i.purpose || i.name}`);
       const out = [
-        "Interpret this Blissymbolics word composed by Blissymbolics characters. Reply with your 5 best English guesses, best first, as a JSON array.",
-        `Word: ${context.spelling}\n`,
+        "Interpret this symbolic word composed of following characters:"
       ];
-      if (parts) out.push(`Characters:\n${parts.join("\n")}`);
+      if (context.subwords.length > 0) {
+        for (const s of context.subwords) {
+          const parts = s.helpers.map(h => h.gloss);
+          out.push(`A character meaning "${parts.join(", ")}"`);
+        }
+      }
+      if (context.indicators.length > 0) {
+        for (const i of context.indicators) {
+          out.push(`A character that ${i.purpose || i.name}`);
+        }
+      }
+      out.push("\nReply with your 5 best English guesses, best first, as a JSON array.");
       return out.join("\n");
     },
   },
@@ -30,7 +37,7 @@ export default [
     name: "narrative",
     build: (context) => {
       const out = [];
-      out.push("Interpret this Blissymbolics word. Reply with your 5 best English guesses, best first, as a JSON array.");
+      out.push("Interpret this symbolic word. Reply with your 5 best English guesses, best first, as a JSON array.");
       out.push(`Word: ${context.spelling}  (${context.charCount + context.indicators.length} symbols)`);
       if (context.subwords.length) {
         out.push("\nParts of it that are words themselves:");

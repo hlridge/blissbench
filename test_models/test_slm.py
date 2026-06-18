@@ -47,6 +47,7 @@ def extract_candidates(text: str, n: int = 5) -> list:
     Strategy 3 (final fallback): first n non-empty lines.
     """
     text = re.sub(r'<analysis>[\s\S]*?</analysis>', '', text).strip()
+    text = re.sub(r'<think>[\s\S]*?</think>', '', text).strip()
     for m in re.finditer(r'\[[\s\S]*?\]', text):
         try:
             parsed = json.loads(m.group())
@@ -106,6 +107,7 @@ def generate_response(model, tokenizer, prompt: str, system_prompt: str) -> str:
         ],
         add_generation_prompt=True,
         tokenize=False,
+        enable_thinking=True,
     )
     inputs = tokenizer(text=text, return_tensors="pt").to(model.device)
     input_len = inputs["input_ids"].shape[-1]
