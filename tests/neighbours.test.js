@@ -52,11 +52,13 @@ test('sharedStartOf: longest-shared-affix first, tail bounded, indicator-agnosti
   assert.deepEqual(out.map((n) => n.id), ['B4', 'B3', 'B2', 'B13']);
   assert.deepEqual(out.map((n) => n.sharedLen), [3, 2, 1, 1]);
   const b4 = out.find((n) => n.id === 'B4');
-  assert.equal(b4.sharedSpelling, 'B100/B200/B300');
-  assert.equal(b4.spelling, 'B100/B200/B300/B400'); // neighbour's own base spelling
+  assert.equal(b4.sharedBaseSpelling, 'B100/B200/B300');
+  assert.equal(b4.baseSpelling, 'B100/B200/B300/B400'); // neighbour's own base sequence
+  assert.equal(b4.spelling, 'B100/B200/B300/B400'); // no indicators -> spelling equals baseSpelling
   const b13 = out.find((n) => n.id === 'B13');
-  assert.equal(b13.spelling, 'B100/B888'); // indicators stripped (base sequence)
-  assert.equal(b13.sharedSpelling, 'B100');
+  assert.equal(b13.baseSpelling, 'B100/B888'); // indicators stripped (the search key)
+  assert.equal(b13.spelling, 'B100/B888;;B81'); // spelling keeps the ;;-indicator
+  assert.equal(b13.sharedBaseSpelling, 'B100');
 });
 
 test('sharedEndOf: longest-shared-suffix first, head bounded', () => {
@@ -64,8 +66,8 @@ test('sharedEndOf: longest-shared-suffix first, head bounded', () => {
   const out = ds.sharedEndOf('B1');
   assert.deepEqual(out.map((n) => n.id), ['B6', 'B5']); // share 2 before share 1
   assert.deepEqual(out.map((n) => n.sharedLen), [2, 1]);
-  assert.equal(out.find((n) => n.id === 'B6').sharedSpelling, 'B200/B300');
-  assert.equal(out.find((n) => n.id === 'B5').sharedSpelling, 'B300');
+  assert.equal(out.find((n) => n.id === 'B6').sharedBaseSpelling, 'B200/B300');
+  assert.equal(out.find((n) => n.id === 'B5').sharedBaseSpelling, 'B300');
 });
 
 test('neighboursOf bundles both groups and stays disjoint from subwords/siblings/self', () => {
@@ -115,6 +117,31 @@ test('buildContext caps neighbours at 8 per group, deepest-first, with omitted c
   assert.equal(ctx.neighbours.omitted.sharedEnd, Math.max(0, full.sharedEnd.length - 8));
 });
 
+test('buildContext: neighbourLimit option caps each group and the legend follows; default unchanged', () => {
+  const ds = fixtureDataset();
+  // Default budget: all 4 shared-start neighbours shown, none omitted.
+  const full = ds.buildContext('B1');
+  assert.deepEqual(full.neighbours.sharedStart.map((n) => n.id), ['B4', 'B3', 'B2', 'B13']);
+  assert.equal(full.neighbours.omitted.sharedStart, 0);
+
+  // A tighter budget keeps the deepest-shared prefix and surfaces the rest as omitted.
+  const capped = ds.buildContext('B1', { neighbourLimit: 2 });
+  assert.deepEqual(capped.neighbours.sharedStart.map((n) => n.id), ['B4', 'B3']);
+  assert.equal(capped.neighbours.omitted.sharedStart, 2);
+
+  // Infinity is an explicit "all" (equals the default here, where nothing is omitted).
+  const all = ds.buildContext('B1', { neighbourLimit: Infinity });
+  assert.deepEqual(all.neighbours.sharedStart.map((n) => n.id), full.neighbours.sharedStart.map((n) => n.id));
+
+  // The legend is derived from the CAPPED neighbour set, so a zero budget empties it too.
+  const lds = legendDataset();
+  assert.ok(lds.buildContext('B1').legend.length > 0, 'default budget yields a legend');
+  const none = lds.buildContext('B1', { neighbourLimit: 0 });
+  assert.equal(none.neighbours.sharedStart.length, 0);
+  assert.equal(none.neighbours.sharedEnd.length, 0);
+  assert.equal(none.legend.length, 0, 'no neighbours -> no legend');
+});
+
 // --- legend: decode the neighbours' NON-SHARED parts -------------------------
 // Target B1 = B100/B200/B300. B2 is a shared-START neighbour (shares B100), so its
 // non-shared tail is B401/B402; B3 is a shared-END neighbour (shares B300), so its
@@ -140,15 +167,15 @@ const legendDataset = () =>
 test('legend decodes neighbours\' non-shared parts: single AND multi-glyph, target spans excluded', () => {
   const ds = legendDataset();
   const ctx = ds.buildContext('B1');
-  // B401/B402 (len 2) first, then the singles by spelling: B401, B402, B777.
-  assert.deepEqual(ctx.legend.map((p) => p.spelling), ['B401/B402', 'B401', 'B402', 'B777']);
+  // B401/B402 (len 2) first, then the singles by base spelling: B401, B402, B777.
+  assert.deepEqual(ctx.legend.map((p) => p.baseSpelling), ['B401/B402', 'B401', 'B402', 'B777']);
 
-  const multi = ctx.legend.find((p) => p.spelling === 'B401/B402');
+  const multi = ctx.legend.find((p) => p.baseSpelling === 'B401/B402');
   assert.equal(multi.length, 2);
   assert.equal(multi.gloss, 'widget'); // a multi-glyph sequence resolved to its own word
-  assert.equal(ctx.legend.find((p) => p.spelling === 'B777').gloss, 'omega'); // shared-END head decoded too
+  assert.equal(ctx.legend.find((p) => p.baseSpelling === 'B777').gloss, 'omega'); // shared-END head decoded too
 
-  const spellings = new Set(ctx.legend.map((p) => p.spelling));
+  const spellings = new Set(ctx.legend.map((p) => p.baseSpelling));
   assert.equal(spellings.has('B100'), false, 'a target subword span is never a legend entry');
   for (const p of ctx.legend) assert.notEqual(p.id, 'B1', 'the target itself is never decoded into its own legend');
 });
@@ -162,6 +189,7 @@ test('real kit: buildContext.legend is present, shaped, leak-free, and surfaces 
   assert.ok(Array.isArray(ctx0.legend), 'legend is an array on every context');
   for (const p of ctx0.legend) {
     assert.equal(typeof p.spelling, 'string');
+    assert.equal(typeof p.baseSpelling, 'string');
     assert.equal(typeof p.gloss, 'string');
     assert.notEqual(p.id, ctx0.targetId, 'legend never resolves to the target itself');
   }
@@ -186,11 +214,11 @@ test('real kit: every neighbour shares the right affix and is disjoint from self
     for (const n of sharedStart) {
       assert.equal(n.id === t.targetId, false, 'no self');
       assert.equal(siblingIds.has(n.id), false, 'neighbour is not a sibling');
-      assert.equal(n.spelling.split('/')[0], firstGlyph, 'shared-start begins with the target head glyph');
+      assert.equal(n.baseSpelling.split('/')[0], firstGlyph, 'shared-start begins with the target head glyph');
       assert.ok(n.sharedLen >= 1, 'shares at least one glyph');
     }
     for (const n of sharedEnd) {
-      assert.equal(n.spelling.split('/').pop(), lastGlyph, 'shared-end ends with the target tail glyph');
+      assert.equal(n.baseSpelling.split('/').pop(), lastGlyph, 'shared-end ends with the target tail glyph');
       assert.ok(n.sharedLen >= 1);
     }
   }

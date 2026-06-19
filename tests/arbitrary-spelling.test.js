@@ -40,7 +40,7 @@ test('buildContextFromSpelling: arbitrary (unknown) spelling -> blocks, no exact
   assert.ok(Array.isArray(ctx.modifiers) && Array.isArray(ctx.indicators));
   assert.deepEqual(ctx.exactMatch, [], 'no known word for this exact spelling');
   // B3 (B100) is a subword helper; B1 and B2 share the B100/B200 prefix -> neighbours.
-  assert.ok(ctx.subwords.some((s) => s.spelling === 'B100' && s.helpers.some((h) => h.id === 'B3')));
+  assert.ok(ctx.subwords.some((s) => s.baseSpelling === 'B100' && s.helpers.some((h) => h.id === 'B3')));
   const startIds = ctx.neighbours.sharedStart.map((n) => n.id);
   assert.ok(startIds.includes('B1') && startIds.includes('B2'), 'shared-start neighbours found from spelling alone');
 });

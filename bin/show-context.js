@@ -13,31 +13,45 @@
  *   node bin/show-context.js B4946          # by id or code
  *   node bin/show-context.js --target B1828
  *   node bin/show-context.js B4946 --json   # raw JSON
+ *   node bin/show-context.js B4946 --neighbour-limit 4   # leaner context (default 8; 'all' = no cap)
  */
 import { loadKit } from '../src/index.js';
 
 const argv = process.argv.slice(2);
+const flagIndex = (name) => argv.indexOf(`--${name}`);
 const flag = (name) => {
-  const i = argv.indexOf(`--${name}`);
+  const i = flagIndex(name);
   return i !== -1 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null;
 };
 const asJson = argv.includes('--json');
-const target = flag('target') || argv.find((a) => !a.startsWith('--'));
+// Indices consumed as a flag's VALUE, so a bare value (e.g. the 4 in `--neighbour-limit 4`)
+// is never mistaken for the positional target, whatever the argument order.
+const valueIdx = new Set();
+for (const name of ['target', 'neighbour-limit']) {
+  const i = flagIndex(name);
+  if (i !== -1 && argv[i + 1] && !argv[i + 1].startsWith('--')) valueIdx.add(i + 1);
+}
+const target = flag('target') || argv.find((a, i) => !a.startsWith('--') && !valueIdx.has(i));
+// Presentation knob passed straight to buildContext (default = the kit's 8; 'all' = no cap).
+const rawLimit = flag('neighbour-limit');
+const neighbourLimit =
+  rawLimit == null ? undefined : String(rawLimit).toLowerCase() === 'all' ? Infinity : Number.parseInt(rawLimit, 10);
+const ctxOptions = neighbourLimit === undefined || Number.isNaN(neighbourLimit) ? {} : { neighbourLimit };
 
 // A word's own indicators, compactly, for appending to a helper line.
 const inds = (xs) =>
   xs && xs.length ? `  ⟨${xs.map((i) => `${i.spelling} ${i.name.replace(/^INDICATOR /, '')}`).join('; ')}⟩` : '';
 
 const main = async () => {
-  if (!target) throw new Error('Usage: node bin/show-context.js <targetId|code> [--json]');
+  if (!target) throw new Error('Usage: node bin/show-context.js <targetId|code> [--json] [--neighbour-limit N|all]');
   const kit = await loadKit();
-  let ctx = kit.dataset.buildContext(target);
+  let ctx = kit.dataset.buildContext(target, ctxOptions);
   let raw = false;
   if (!ctx) {
     // Not a known target id/code: treat the input as an ARBITRARY raw spelling (the
     // unknown-word path). `exactMatch` then tells you whether it is actually known.
     try {
-      ctx = kit.dataset.buildContextFromSpelling(target);
+      ctx = kit.dataset.buildContextFromSpelling(target, ctxOptions);
       raw = true;
     } catch {
       throw new Error(`"${target}" is not a known target id/code, nor a B-code word spelling.`);
@@ -75,21 +89,21 @@ const main = async () => {
 
   console.log(`\nSubwords with helpers (${ctx.subwords.length}):`);
   for (const s of ctx.subwords) {
-    console.log(`  ${s.spelling}`);
+    console.log(`  ${s.baseSpelling}`);
     for (const h of s.helpers) {
-      console.log(`     ↳ ${h.notation.padEnd(16)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
+      console.log(`     ↳ ${h.spelling.padEnd(16)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
     }
   }
 
   console.log(`\nSiblings: same glyphs, different indicators (${ctx.siblings.length}):`);
   for (const h of ctx.siblings) {
-    console.log(`  ${h.notation.padEnd(20)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
+    console.log(`  ${h.spelling.padEnd(20)} (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
   }
 
   const nb = ctx.neighbours;
   const moreOf = (group) => (nb.omitted[group] ? ` (+${nb.omitted[group]} more via neighboursOf)` : '');
   const showNeighbour = (h) =>
-    console.log(`     ↳ ${h.spelling.padEnd(20)} [share ${h.sharedLen}: ${h.sharedSpelling}]  (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
+    console.log(`     ↳ ${h.baseSpelling.padEnd(20)} [share ${h.sharedLen}: ${h.sharedBaseSpelling}]  (${h.pos || '-'}) "${h.gloss}"${inds(h.indicators)}`);
   console.log('\nNeighbours: shared-affix words (deepest-shared first):');
   console.log(`  shared start: same leading glyph(s) (${nb.sharedStart.length})${moreOf('sharedStart')}:`);
   nb.sharedStart.forEach(showNeighbour);
@@ -99,7 +113,7 @@ const main = async () => {
   const legend = ctx.legend || [];
   console.log(`\nLegend: words inside the neighbours' non-shared parts (${legend.length}):`);
   for (const p of legend) {
-    console.log(`  ${p.spelling.padEnd(16)} ${(p.id || '').padEnd(8)} (${p.pos || '-'}) "${p.gloss}"`);
+    console.log(`  ${p.baseSpelling.padEnd(16)} ${(p.id || '').padEnd(8)} (${p.pos || '-'}) "${p.gloss}"`);
   }
 };
 

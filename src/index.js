@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { createDataset } from './query/dataset.js';
 
-export const KIT_VERSION = '0.3.0';
+export const KIT_VERSION = '0.4.0';
 
 const KIT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const paths = {

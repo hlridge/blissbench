@@ -1,8 +1,8 @@
 {
-  "kitVersion": "0.3.0",
+  "kitVersion": "0.4.0",
   "sourceFile": "blissary-bliss-dictionary-export-2026-05-23.json",
   "sha256": "b54a1ec3bf215f3d85de3a44daf0f6de4fda173d7d74707ad787fe5e6ecfa164",
-  "generatedAt": "2026-06-14T10:45:28.592Z",
+  "generatedAt": "2026-06-19T16:54:02.313Z",
   "counts": {
     "total": 6420,
     "eligible": 4186,

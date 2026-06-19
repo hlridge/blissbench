@@ -70,7 +70,7 @@ const buildPrompt = (c) => {
     out.push('\nParts of it that are themselves words:');
     for (const s of c.subwords) {
       const senses = s.helpers.slice(0, 2).map((h) => h.gloss).join('; ');
-      out.push(`  ${s.spelling} = ${senses}${s.helpers.length > 2 ? ` (+${s.helpers.length - 2} more senses)` : ''}`);
+      out.push(`  ${s.baseSpelling} = ${senses}${s.helpers.length > 2 ? ` (+${s.helpers.length - 2} more senses)` : ''}`);
     }
   }
 
@@ -80,27 +80,27 @@ const buildPrompt = (c) => {
   // `dedupe` (used for the GLOSSARY below) merges a glyph's several senses — eye / to
   // see / visible — onto one line so the same code is never printed twice.
   const dedupe = (items) => {
-    const bySpelling = new Map();
+    const byBaseSpelling = new Map();
     for (const n of items) {
-      const cur = bySpelling.get(n.spelling);
+      const cur = byBaseSpelling.get(n.baseSpelling);
       if (cur) cur.glosses.push(n.gloss);
-      else bySpelling.set(n.spelling, { spelling: n.spelling, sharedLen: n.sharedLen, glosses: [n.gloss] });
+      else byBaseSpelling.set(n.baseSpelling, { baseSpelling: n.baseSpelling, sharedLen: n.sharedLen, glosses: [n.gloss] });
     }
-    return [...bySpelling.values()];
+    return [...byBaseSpelling.values()];
   };
   const shownParts = new Set();
   const printGroup = (label, items, side, omitted) => {
     if (!items.length) return;
     out.push(`\n${label}`);
     for (const n of items.slice(0, SHOW)) {
-      // Print each neighbour's indicator-bearing `.notation`, NOT its base `.spelling`.
+      // Print each neighbour's indicator-bearing `.spelling`, NOT its `.baseSpelling`.
       // A noun and its verb share an identical base spelling (encouragement
       // B949/B313/B967 vs to encourage B949;B81/B313/B967); the indicator is the only
       // thing that tells them apart, so the base alone collapses two distinct words.
-      out.push(`  ${n.notation} = ${n.gloss}`);
+      out.push(`  ${n.spelling} = ${n.gloss}`);
       // The glossary is keyed by BASE spelling, so derive the non-shared symbols from
-      // `.spelling` (not the notation) to keep it in sync with what we printed.
-      const g = n.spelling.split('/');
+      // `.baseSpelling` (not the indicator-bearing spelling) to keep it in sync.
+      const g = n.baseSpelling.split('/');
       const offset = side === 'start' ? g.slice(n.sharedLen) : g.slice(0, g.length - n.sharedLen);
       for (const part of spansOf(offset)) shownParts.add(part);
     }
@@ -111,10 +111,10 @@ const buildPrompt = (c) => {
 
   // Decode just the symbols that appear in the related words we printed above
   // (c.legend covers ALL neighbours, so filter it to the ones we showed).
-  const glossary = dedupe(c.legend.filter((p) => shownParts.has(p.spelling)));
+  const glossary = dedupe(c.legend.filter((p) => shownParts.has(p.baseSpelling)));
   if (glossary.length) {
     out.push('\nWhat the other symbols in those related words mean:');
-    for (const p of glossary.slice(0, 8)) out.push(`  ${p.spelling} = ${p.glosses.join('; ')}`);
+    for (const p of glossary.slice(0, 8)) out.push(`  ${p.baseSpelling} = ${p.glosses.join('; ')}`);
     if (glossary.length > 8) out.push(`  …(+${glossary.length - 8} more)`);
   }
   return out.join('\n'); // ← this string is what you would send to your model

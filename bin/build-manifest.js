@@ -104,6 +104,12 @@ const renderContract = ({ manifest, report, modifiers, indicators, sets, aliases
   push('hints. Treat a gloss as evidence, not ground truth.', '');
   push('`kit.dataset.buildContext(targetId)` returns exactly this leak-free view. The raw accessors');
   push('(`getEntry`, `answerKeyOf`, `derivationOf`) expose target-private data and must not feed prompts.', '');
+  push('An optional second argument tunes presentation without touching the frozen surface:');
+  push('`buildContext(targetId, { neighbourLimit })` caps how many shared-affix neighbours each group');
+  push('surfaces (default 8; `Infinity` = all), and the legend follows automatically. It has no effect on');
+  push('eligibility, the target set, the answer keys, or the snapshot — but because richer/leaner context');
+  push('changes how a method performs, a non-default value should be recorded alongside the run so two');
+  push('runs are only compared at the same context budget.', '');
   push('For interpreting an **arbitrary spelling that need not be a target** (the real goal, an unseen');
   push('Bliss word), `kit.dataset.buildContextFromSpelling(spelling)` returns the same building blocks');
   push('from the spelling alone, plus an `exactMatch` flag (whether it is already a known word). It has');

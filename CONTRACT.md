@@ -8,7 +8,7 @@
 
 - Source: `data/blissary-bliss-dictionary-export-2026-05-23.json`
 - SHA-256: `b54a1ec3bf215f3d85de3a44daf0f6de4fda173d7d74707ad787fe5e6ecfa164`
-- Kit version: `0.3.0`
+- Kit version: `0.4.0`
 - Entries: **6420** total → **4186** eligible targets
 
 Scores are comparable only across runs that share the same SHA-256 (and set seed).
@@ -49,6 +49,13 @@ hints. Treat a gloss as evidence, not ground truth.
 
 `kit.dataset.buildContext(targetId)` returns exactly this leak-free view. The raw accessors
 (`getEntry`, `answerKeyOf`, `derivationOf`) expose target-private data and must not feed prompts.
+
+An optional second argument tunes presentation without touching the frozen surface:
+`buildContext(targetId, { neighbourLimit })` caps how many shared-affix neighbours each group
+surfaces (default 8; `Infinity` = all), and the legend follows automatically. It has no effect on
+eligibility, the target set, the answer keys, or the snapshot — but because richer/leaner context
+changes how a method performs, a non-default value should be recorded alongside the run so two
+runs are only compared at the same context budget.
 
 For interpreting an **arbitrary spelling that need not be a target** (the real goal, an unseen
 Bliss word), `kit.dataset.buildContextFromSpelling(spelling)` returns the same building blocks

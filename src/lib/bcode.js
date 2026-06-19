@@ -78,7 +78,7 @@ const parseCharacter = (value, index) => {
 
   const [base, ...indicatorParts] = parts;
   // Every single-';' indicator is a diacritic on THIS character and stays attached to it
-  // (e.g. "B655;B97" = the concrete reading of B655). Scope is decided by the notation —
+  // (e.g. "B655;B97" = the concrete reading of B655). Scope is decided by the separator —
   // ';' character-level vs ';;' word-level (parseBCodeWord) — not by the indicator code, so
   // B97/B6436 are no longer special-cased and a char-level indicator is never hoisted away.
   const indicators = parseIndicatorTokens(indicatorParts.join(';'));

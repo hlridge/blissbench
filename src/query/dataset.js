@@ -95,19 +95,6 @@ const spanBaseSet = (baseArr) => {
   return set;
 };
 
-// Ordered contiguous spans (singles and longer, up to the whole array) of a base
-// array, as joined strings. Used to decode a neighbour's non-shared part into the
-// dictionary words it contains, exactly like subwords decode the target.
-const contiguousSpansOf = (baseArr) => {
-  const spans = [];
-  for (let start = 0; start < baseArr.length; start += 1) {
-    for (let end = start + 1; end <= baseArr.length; end += 1) {
-      spans.push(baseArr.slice(start, end).join('/'));
-    }
-  }
-  return spans;
-};
-
 export const createDataset = ({ entries, modifiers, indicators }) => {
   setModifierReference(modifiers);
   // Curated indicator meaning (authoritative; NOT the dictionary gloss).
@@ -127,14 +114,27 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
       return false;
     }
   };
-  // The spelling to SHOW for an entry: base glyphs with their indicators kept inline
+  // The full spelling to SHOW for an entry: base glyphs with their indicators kept inline
   // (e.g. "B655;B97" = the concrete "clock" reading of "time" B655), so a helper found by
-  // the indicator-AGNOSTIC search still carries the exact notation its gloss refers to. An
+  // the indicator-AGNOSTIC search still carries the exact spelling its gloss refers to. An
   // atomic character (sub-glyph derivation, or a shape-primitive code) shows as its own id.
-  const notationOf = (entry) => {
+  const spellingOf = (entry) => {
     if (hasSubglyphDerivation(entry.spelling)) return entry.id;
     try {
       return normalizeSpelling(entry.spelling);
+    } catch {
+      return entry.id;
+    }
+  };
+  // The indicator-STRIPPED base-glyph sequence of an entry (the indicator-agnostic
+  // search key). Mirrors spellingOf's fallback exactly: an atomic character (sub-glyph
+  // derivation or shape-primitive code) has no decomposable spelling, so it shows as
+  // its own id — identical to its spelling. So spelling === baseSpelling whenever there
+  // are no indicators to strip (and both equal the id for an atomic glyph).
+  const baseSpellingOf = (entry) => {
+    if (hasSubglyphDerivation(entry.spelling)) return entry.id;
+    try {
+      return baseSequenceOf(entry.spelling) || entry.id;
     } catch {
       return entry.id;
     }
@@ -223,9 +223,12 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
 
   const helperView = (entry) => ({
     id: entry.id,
-    // The exact indicator-bearing notation (e.g. "B655;B97" for the concrete "clock"),
-    // so a helper found by the indicator-agnostic search still shows which form it is.
-    notation: notationOf(entry),
+    // The full spelling with its indicators kept (e.g. "B655;B97" for the concrete
+    // "clock" reading of "time"), so a helper found by the indicator-agnostic search
+    // still shows WHICH form it is, paired with the indicator-stripped base sequence
+    // that search actually matched on. Equal when there's nothing to strip.
+    spelling: spellingOf(entry),
+    baseSpelling: baseSpellingOf(entry),
     gloss: entry.gloss,
     pos: entry.pos,
     indicators: ownIndicators(entry),
@@ -263,8 +266,13 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     for (let start = 0; start < chars.length; start += 1) {
       for (let end = start + 1; end <= chars.length; end += 1) {
         if (start === 0 && end === chars.length) continue; // proper subwords only
-        const base = chars.slice(start, end).map((c) => c.baseSpelling).join('/');
-        spans.push({ span: [start, end], spelling: base, length: end - start, helpers: helpersForBase(base, selfId) });
+        const slice = chars.slice(start, end);
+        // Both flavours of this contiguous span as it sits in the target: `spelling`
+        // keeps each character's indicators, `baseSpelling` strips them (the key the
+        // indicator-agnostic helper search matches on). Equal when the span has none.
+        const baseSpelling = slice.map((c) => c.baseSpelling).join('/');
+        const spelling = slice.map((c) => c.spelling).join('/');
+        spans.push({ span: [start, end], spelling, baseSpelling, length: end - start, helpers: helpersForBase(baseSpelling, selfId) });
       }
     }
     return spans;
@@ -291,15 +299,19 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     return entry ? siblingHelpersFor(entry.spelling, entry.id) : [];
   };
 
-  // Neighbour view: a helper view PLUS the neighbour's own base spelling and how
-  // much it shares with the target (longest shared affix). Fair game like any
-  // helper: it is ANOTHER preferred entry, never the target's own (sealed) data.
-  const neighbourView = (entry, sharedLen, sharedSpelling) => ({
+  // Neighbour view: a helper view PLUS how much it shares with the target (longest
+  // shared affix, as a base-glyph sequence). Fair game like any helper: it is ANOTHER
+  // preferred entry, never the target's own (sealed) data. Carries both spelling
+  // flavours like every other entry — `spelling` (indicators kept), `baseSpelling`
+  // (the indicator-agnostic key the affix match ran on).
+  const neighbourView = (entry, sharedLen, sharedBaseSpelling) => ({
     id: entry.id,
-    spelling: baseSequenceOf(entry.spelling),
-    notation: notationOf(entry),
+    spelling: spellingOf(entry),
+    baseSpelling: baseSpellingOf(entry),
     sharedLen,
-    sharedSpelling,
+    // The shared affix is the indicator-AGNOSTIC overlap: the two words may differ on
+    // indicators within it, so there is no single full spelling for it — base-only.
+    sharedBaseSpelling,
     gloss: entry.gloss,
     pos: entry.pos,
     indicators: ownIndicators(entry),
@@ -333,9 +345,9 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
       const shared = commonPrefixLen(target, baseArr);
       const tail = baseArr.length - shared;
       if (tail < 1 || tail > MAX_START_TAIL) continue;
-      found.push({ entry: candidate, sharedLen: shared, sharedSpelling: target.slice(0, shared).join('/'), total: baseArr.length });
+      found.push({ entry: candidate, sharedLen: shared, sharedBaseSpelling: target.slice(0, shared).join('/'), total: baseArr.length });
     }
-    return sortNeighbours(found).map((f) => neighbourView(f.entry, f.sharedLen, f.sharedSpelling));
+    return sortNeighbours(found).map((f) => neighbourView(f.entry, f.sharedLen, f.sharedBaseSpelling));
   };
 
   const sharedStartOf = (idOrCode) => {
@@ -359,9 +371,9 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
       const shared = commonSuffixLen(target, baseArr);
       const head = baseArr.length - shared;
       if (head < 1 || head > MAX_END_HEAD) continue;
-      found.push({ entry: candidate, sharedLen: shared, sharedSpelling: target.slice(target.length - shared).join('/'), total: baseArr.length });
+      found.push({ entry: candidate, sharedLen: shared, sharedBaseSpelling: target.slice(target.length - shared).join('/'), total: baseArr.length });
     }
-    return sortNeighbours(found).map((f) => neighbourView(f.entry, f.sharedLen, f.sharedSpelling));
+    return sortNeighbours(found).map((f) => neighbourView(f.entry, f.sharedLen, f.sharedBaseSpelling));
   };
 
   const sharedEndOf = (idOrCode) => {
@@ -387,14 +399,16 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     return entry ? neighboursFor(entry.spelling, entry.id) : { sharedStart: [], sharedEnd: [] };
   };
 
-  // The buildContext view of neighbours: each group capped to the top
-  // NEIGHBOUR_CONTEXT_LIMIT (deepest-shared first), plus how many were omitted.
-  const capNeighbours = ({ sharedStart, sharedEnd }) => ({
-    sharedStart: sharedStart.slice(0, NEIGHBOUR_CONTEXT_LIMIT),
-    sharedEnd: sharedEnd.slice(0, NEIGHBOUR_CONTEXT_LIMIT),
+  // The buildContext view of neighbours: each group capped to the top `limit`
+  // (deepest-shared first), plus how many were omitted. `limit` is supplied by
+  // assembleBlocks (defaulting to NEIGHBOUR_CONTEXT_LIMIT); callers can widen or
+  // narrow it per build via the `neighbourLimit` option.
+  const capNeighbours = ({ sharedStart, sharedEnd }, limit) => ({
+    sharedStart: sharedStart.slice(0, limit),
+    sharedEnd: sharedEnd.slice(0, limit),
     omitted: {
-      sharedStart: Math.max(0, sharedStart.length - NEIGHBOUR_CONTEXT_LIMIT),
-      sharedEnd: Math.max(0, sharedEnd.length - NEIGHBOUR_CONTEXT_LIMIT)
+      sharedStart: Math.max(0, sharedStart.length - limit),
+      sharedEnd: Math.max(0, sharedEnd.length - limit)
     }
   });
 
@@ -415,27 +429,43 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     const legend = [];
     const harvest = (neighbours, side) => {
       for (const nb of neighbours) {
-        const nbBase = (nb.spelling || '').split('/').filter(Boolean);
-        if (!nbBase.length) continue;
-        const off = side === 'start'
-          ? nbBase.slice(nb.sharedLen)                     // tail after the shared prefix
-          : nbBase.slice(0, nbBase.length - nb.sharedLen); // head before the shared suffix
-        for (const part of contiguousSpansOf(off)) {
-          if (targetSpans.has(part) || seenPart.has(part)) continue;
-          seenPart.add(part);
-          for (const h of helpersForBase(part, selfId)) {
-            legend.push({ spelling: part, length: part.split('/').length, id: h.id, gloss: h.gloss, pos: h.pos });
+        const baseChars = (nb.baseSpelling || '').split('/').filter(Boolean);
+        if (!baseChars.length) continue;
+        // Per-character indicator-bearing forms, aligned 1:1 with baseChars (so a part
+        // can be shown WITH its indicators, not just as a stripped key). Falls back to
+        // the base glyphs when the full spelling can't be reparsed (atomic / shape codes).
+        let spellingChars = baseChars;
+        try {
+          const parsed = parseBCodeWord(nb.spelling).characters.map((c) => c.spelling);
+          if (parsed.length === baseChars.length) spellingChars = parsed;
+        } catch {
+          // keep spellingChars = baseChars
+        }
+        // The non-shared region (glyphs that differ from the target): the tail after the
+        // shared prefix (start) or the head before the shared suffix (end).
+        const lo = side === 'start' ? nb.sharedLen : 0;
+        const hi = side === 'start' ? baseChars.length : baseChars.length - nb.sharedLen;
+        // Every contiguous span inside that region, decoded into the words it contains.
+        for (let s = lo; s < hi; s += 1) {
+          for (let e = s + 1; e <= hi; e += 1) {
+            const baseSpelling = baseChars.slice(s, e).join('/');
+            if (targetSpans.has(baseSpelling) || seenPart.has(baseSpelling)) continue;
+            seenPart.add(baseSpelling);
+            const spelling = spellingChars.slice(s, e).join('/');
+            for (const h of helpersForBase(baseSpelling, selfId)) {
+              legend.push({ spelling, baseSpelling, length: e - s, id: h.id, gloss: h.gloss, pos: h.pos });
+            }
           }
         }
       }
     };
     harvest(capped.sharedStart, 'start');
     harvest(capped.sharedEnd, 'end');
-    // Longest sequences first (the most informative), then stable by spelling + id.
+    // Longest sequences first (the most informative), then stable by base spelling + id.
     return legend.sort(
       (a, b) =>
         b.length - a.length ||
-        a.spelling.localeCompare(b.spelling, 'en', { numeric: true }) ||
+        a.baseSpelling.localeCompare(b.baseSpelling, 'en', { numeric: true }) ||
         a.id.localeCompare(b.id, 'en', { numeric: true })
     );
   };
@@ -488,11 +518,23 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
   // The shared building blocks for a spelling (modifiers / indicators / subwords /
   // siblings / neighbours). `selfId` is the entry excluded as its own helper, the
   // target's id for buildContext, or null for an arbitrary spelling with no "self".
-  const assembleBlocks = (spelling, selfId) => {
+  // `options.neighbourLimit` caps each neighbour group (default NEIGHBOUR_CONTEXT_LIMIT;
+  // Infinity = all). Presentation-only — it never affects eligibility / answers / snapshot.
+  const assembleBlocks = (spelling, selfId, { neighbourLimit = NEIGHBOUR_CONTEXT_LIMIT } = {}) => {
     const parsed = parseBCodeWord(spelling);
-    const neighbours = capNeighbours(neighboursFor(spelling, selfId));
+    // Normalize the knob: Infinity = all; any finite value is floored at 0; anything
+    // else (NaN/garbage) falls back to the default. The legend is built from the capped
+    // set below, so it shrinks/grows in lockstep with no extra work.
+    const limit = neighbourLimit === Infinity
+      ? Infinity
+      : Number.isFinite(neighbourLimit) ? Math.max(0, Math.trunc(neighbourLimit)) : NEIGHBOUR_CONTEXT_LIMIT;
+    const neighbours = capNeighbours(neighboursFor(spelling, selfId), limit);
     return {
       spelling,
+      // The same word with all indicators stripped (the indicator-agnostic key the
+      // subword/sibling/neighbour searches run on). Equal to `spelling` when there's
+      // nothing to strip.
+      baseSpelling: parsed.characters.map((c) => c.baseSpelling).join('/'),
       charCount: parsed.characters.length,
       // Pre-head operator sequences, each with two readings: `gloss` (the symbol's
       // own dictionary gloss, its recorded standalone sense, data-driven) and
@@ -525,11 +567,13 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
    * target's OWN entry sealed: excluded as its own helper/sibling, and none of its
    * gloss / explanation / derivation / part-of-speech is read. Anything in the target
    * entry could be a tell. This is the blessed benchmark path for building prompts.
+   * `options.neighbourLimit` (default 8, `Infinity` = all) caps how many shared-affix
+   * neighbours each group surfaces; it is presentation-only and never affects scoring.
    */
-  const buildContext = (idOrCode) => {
+  const buildContext = (idOrCode, options = {}) => {
     const entry = getEntry(idOrCode);
     if (!entry) return null;
-    return { targetId: entry.id, ...assembleBlocks(normalizeSpelling(entry.spelling), entry.id) };
+    return { targetId: entry.id, ...assembleBlocks(normalizeSpelling(entry.spelling), entry.id, options) };
   };
 
   /**
@@ -540,7 +584,7 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
    * the spelling is genuinely novel (a real interpretation, not just a lookup).
    * Throws if the input is not a B-code word spelling.
    */
-  const buildContextFromSpelling = (rawSpelling) => {
+  const buildContextFromSpelling = (rawSpelling, options = {}) => {
     let spelling;
     try {
       spelling = normalizeSpelling(rawSpelling);
@@ -550,12 +594,13 @@ export const createDataset = ({ entries, modifiers, indicators }) => {
     const exactMatch = findBySpelling(spelling).map((e) => ({
       id: e.id,
       spelling: normalizeSpelling(e.spelling),
+      baseSpelling: baseSpellingOf(e),
       pos: e.pos,
       gloss: e.gloss,
       answers: getAnswers(e),
       explanation: getExplanation(e)
     }));
-    return { ...assembleBlocks(spelling, null), exactMatch };
+    return { ...assembleBlocks(spelling, null, options), exactMatch };
   };
 
   const answerKeyOf = (idOrCode) => {

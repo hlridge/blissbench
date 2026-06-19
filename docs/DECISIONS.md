@@ -400,13 +400,16 @@ difference from gloss wording.
 (curated meaning, both the sense markers and the word-level scopes), computed like the
 target's — so a helper that is the action or description form is shown as such, and "how its
 meaning came to be" is explicit (e.g. *heart* = *feeling* + the concrete indicator). A
-character contributes none (it is atomic, §17). Each helper also carries its exact
-indicator-bearing **`notation`** (e.g. `B655;B97` for the concrete "clock" reading of "time"
-`B655`), so a match found by the indicator-agnostic search still shows *which* form it is —
-the spelling the prompt's indicator description refers to. This is a materials enrichment, not
-a prompt-shape opinion: the middle layer decides whether and how to use it. *(Presentation
-only: no effect on eligibility, the target set, or the snapshot hash. `ownIndicators` /
-`notationOf` in `src/query/dataset.js`.)*
+character contributes none (it is atomic, §17). Each helper also carries both spelling
+flavours: its full **`spelling`** with indicators kept (e.g. `B655;B97` for the concrete
+"clock" reading of "time" `B655`) alongside the indicator-stripped **`baseSpelling`** that the
+indicator-agnostic search actually matched on — so a match still shows *which* form it is, the
+spelling the prompt's indicator description refers to, and the two are equal when there is
+nothing to strip. The same pair is on every spelling-bearing object (target, subwords,
+neighbours, legend), so a field named `spelling` means the same thing everywhere. This is a
+materials enrichment, not a prompt-shape opinion: the middle layer decides whether and how to
+use it. *(Presentation only: no effect on eligibility, the target set, or the snapshot hash.
+`ownIndicators` / `spellingOf` / `baseSpellingOf` in `src/query/dataset.js`.)*
 
 ---
 
