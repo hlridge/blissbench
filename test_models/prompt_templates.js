@@ -10,6 +10,9 @@
  *   node test_models/gen_prompts.js
  */
 
+import hlridgeV7 from "./hlridge-v7.js";
+import hlridgeV21 from "./hlridge-v21.js";
+
 export default [
   {
     name: "simple",
@@ -208,4 +211,6 @@ Step 2. After your analysis, output your final 5 best English guesses STRICTLY a
       return out.join('\n');
     },
   },
+  hlridgeV7,
+  hlridgeV21,
 ];
