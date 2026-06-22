@@ -116,8 +116,17 @@ Arguments:
 | `--runner` | no | model dir basename | Label in every output row |
 | `--prompt-version` | no | prompts file stem | Label in every output row |
 | `--quantize` | no (flag) | off | 4-bit NF4 loading via `bitsandbytes` |
+| `--enable-thinking` | no (flag) | off | Pass `enable_thinking=True` to `apply_chat_template()` |
+| `--thinking-budget` | no | — | Cap thinking tokens (e.g. `512`). Model must support `thinking_budget` param; ignored otherwise. |
+| `--max-tokens` | no | 2048 | Max new tokens for generation |
 
-Responses are written immediately after each target — the output file is usable even if the run is interrupted.
+Responses are written immediately after each target — the output file is usable even if the run is interrupted. Each output row includes a `tokens` field with input/output/total token counts. A per-record and aggregate token summary is printed to stderr at the end of the run.
+
+### Thinking models
+
+Some models (e.g. Qwen3.5-9B, Gemma-4 with `--enable-thinking`) produce internal reasoning text before their answer.
+
+If a model's thinking consumes the token budget and truncates before producing an answer, increase `--max-tokens` (e.g. `--max-tokens 4096`) or use `--thinking-budget` to cap reasoning length.
 
 ### Running on the Alliance cluster
 
@@ -177,7 +186,7 @@ Arguments:
 | `--runner` | no | model tag | Label in every output row |
 | `--prompt-version` | no | prompts file stem | Label in every output row |
 
-Responses are written immediately after each target — the output file is usable even if the run is interrupted. The script prints elapsed time and a score command when complete.
+Responses are written immediately after each target — the output file is usable even if the run is interrupted. Each output row includes a `tokens` field with input/output/total token counts. The script prints elapsed time, token summary, and a score command when complete.
 
 Proceed to Step 4 to score the output.
 
@@ -200,5 +209,7 @@ Use `--set all` for an official full run:
 ```bash
 node bin/score.js --submission test_models/results/subwords-v1.jsonl --set all
 ```
+
+When the submission rows include `tokens` data (emitted by both runners), the score report displays average token usage per record.
 
 Two runs are comparable only when they share the same `data/manifest.json` SHA and the same `--set` argument.

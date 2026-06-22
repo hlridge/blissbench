@@ -168,6 +168,7 @@ Step 1. Enclose your linguistic analysis inside <analysis> tags.
 - Identify which symbol is likely the core "Classifier", which are "Modifiers", and which are "Specifiers" or "Indicators".
 - Synthesize the literal meaning.
 - Brainstorm English words or phrases that match this synthesized meaning. Consider the related words for thematic clues.
+- Keep analysis concise
 
 Step 2. After your analysis, output your final 5 best English guesses STRICTLY as a JSON array of strings, ordered from most accurate to least accurate.
 

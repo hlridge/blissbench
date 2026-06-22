@@ -8,7 +8,7 @@
 # You may obtain a copy of the BSD 3-Clause License at
 # https://github.com/inclusive-design/baby-bliss-bot/blob/main/LICENSE
 
-#SBATCH --job-name=test_small_language_model
+#SBATCH --job-name=test_slm_GLM-4.7-Flash_simple_1000_enable_thinking
 #SBATCH --time 1-00:00
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=h100:1
@@ -36,4 +36,4 @@ pip install torch==2.12.0 transformers==5.12.1 sentencepiece==0.2.1 accelerate==
 pip list
 
 echo "Test small language model with prompts: job ID $SLURM_JOB_ID on nodes $SLURM_JOB_NODELIST."
-python ~/test_slms/test_slm.py --model ~/projects/ctb-whkchun/s2_bliss_LLMs/Qwen3.5-9B --prompts ~/test_slms/prompts/cot-1000.jsonl --output ~/test_slms/results/Qwen3.5-9B/cot-1000.jsonl
+python ~/test_slms/test_slm.py --model ~/projects/ctb-whkchun/s2_bliss_LLMs/GLM-4.7-Flash --prompts ~/test_slms/prompts/simple-1000.jsonl --output ~/test_slms/results/GLM-4.7-Flash/simple-1000.jsonl

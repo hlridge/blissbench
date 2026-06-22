@@ -93,6 +93,8 @@ async function main() {
 
   const startMs = Date.now();
   let count = 0;
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
 
   for (const line of lines) {
     const { targetId, prompt } = JSON.parse(line);
@@ -109,18 +111,28 @@ async function main() {
     const rawResponseText = response.message.content;
     const candidates = extractCandidates(rawResponseText);
 
-    writeFileSync(outPath, JSON.stringify({ targetId, rawResponseText, candidates, runner, promptVersion }) + "\n", { flag: "a" });
+    const inputTokens = response.prompt_eval_count || 0;
+    const outputTokens = response.eval_count || 0;
+    const tokens = { input: inputTokens, output: outputTokens, total: inputTokens + outputTokens };
+    totalInputTokens += inputTokens;
+    totalOutputTokens += outputTokens;
+
+    writeFileSync(outPath, JSON.stringify({ targetId, rawResponseText, candidates, runner, promptVersion, tokens }) + "\n", { flag: "a" });
 
     count += 1;
-    process.stderr.write(`[${count}] ${targetId}: ${JSON.stringify(candidates.slice(0, 2))}\n`);
+    process.stderr.write(`[${count}] ${targetId}: ${JSON.stringify(candidates.slice(0, 2))} (${tokens.total} tokens)\n`);
   }
 
+  const totalTokens = totalInputTokens + totalOutputTokens;
   const elapsedSecs = Math.round((Date.now() - startMs) / 1000);
   const elapsed = elapsedSecs < 60
     ? `${elapsedSecs}s`
     : `${Math.floor(elapsedSecs / 60)}m${elapsedSecs % 60}s`;
 
   process.stderr.write(`\nDone. Processed ${count} prompts in ${elapsed}. Wrote to ${outputPath}\n`);
+  if (count > 0) {
+    process.stderr.write(`Tokens: ${totalTokens} total (${totalInputTokens} in + ${totalOutputTokens} out), avg ${Math.round(totalTokens / count)}/record\n`);
+  }
   process.stderr.write(`Score: node bin/score.js --submission ${outputPath} --set 50\n`);
 }
 
